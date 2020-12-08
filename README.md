@@ -10,11 +10,13 @@ We've tried to document the various aspects of this repository with a whole bunc
 
 ## "How to run the things?"
 
-First, you'll need to make sure you have installed the appropriate software packages, and have downloaded the appropriate data files.
+First, you'll need to make sure you have installed the appropriate software packages, and have downloaded the appropriate data files. 
+
+1. Clone the [neuromorphic-networks] (https://github.com/estefanysuarez/neuromorphic-networks) repository.
+2. Download the "data" folder from [Here] () and place this folder into this repository's root directory.
 Once you've done that, you can get going with the following:
 
 ```bash
-git clone https://github.com/estefanysuarez/neuromorphic-networks
 cd neuromorphic-networks
 conda env create reservoir_computing 
 conda activate reservoir_computing
