@@ -18,8 +18,28 @@ First, you'll need to make sure you have installed the appropriate software pack
 ```bash
 cd neuromorphic-networks
 conda env create -f environment.yml
-conda activate reservoir_computing
+conda activate rcomputing
 ```
+
+### "1. Run simulations"
+python scripts/01_rc_workflow/1_rc_workflow.py
+python scripts/01_rc_workflow/2_get_network_properties.py
+
+### "2. Compile results"
+python scripts/01_fetch_results/fetch_task_results.py
+python scripts/01_rc_workflow/fetch_net_props_results.py
+
+### "3. Analyses and figures"
+python scripts/03_analysis/figX.py
+
+(replace X by the number of the figure)
+
+## "How to only the analyses?"
+1. git clone [suarez_neuromorphicnetworks](https://github.com/estefanysuarez/neuromorphic-networks) repository.
+2. Download the "data" and "proc_results" folders from [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4311814.svg)](https://doi.org/10.5281/zenodo.4311814), and place them folder into the repository's root directory!"
+
+To run the analysis presented in Figure "X" of the manuscript, you just need to run:
+python scripts/03_analysis/figX.py
 
 
 ## "I have some questions..."
