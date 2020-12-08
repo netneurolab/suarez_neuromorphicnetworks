@@ -24,20 +24,20 @@ conda activate rcomputing
 
 3. Then, follow these steps sequentially (i.e., first "Run simulations", then "Compile results" and then "Analyses and Figures"). 
 
-### 1. Run simulations
+### Step 1. Run simulations
 ```bash
 python scripts/01_rc_workflow/1_run_rc_workflow.py
 
 python scripts/01_rc_workflow/2_get_network_properties.py
 ```
 
-### 2. Compile results
+### Step 2. Compile results
 ```bash
 python scripts/01_fetch_results/fetch_task_results.py
 
 python scripts/01_rc_workflow/fetch_net_props_results.py
 ```
-### 3. Analyses and figures
+### Step 3. Analyses and figures
 ```bash
 python scripts/03_analysis/figX.py
 ```
