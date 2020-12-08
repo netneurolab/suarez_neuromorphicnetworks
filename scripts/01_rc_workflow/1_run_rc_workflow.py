@@ -41,7 +41,7 @@ INPUTS = 'subctx'
 CLASS = 'functional' #'functional' 'cytoarch'
 
 N_PROCESS = 10
-N_RUNS = 10
+N_RUNS = 1000
 
 #%% --------------------------------------------------------------------------------------------------------------------
 # STATIC GLOBAL VARIABLES
@@ -558,7 +558,7 @@ def spintest(connectome):
 # ----------------------------------------------------------------------------------------------------------------------
 def main():
 
-    connectome = 'human_250' #human_250  #human_500
+    connectome = 'human_500' #human_250  #human_500
 
     reliability(connectome)
     significance(connectome)
