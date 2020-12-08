@@ -14,12 +14,15 @@ First, you'll need to make sure you have installed the appropriate software pack
 
 1. git clone the [suarez_neuromorphicnetworks](https://github.com/estefanysuarez/neuromorphic-networks) repository.
 2. Download the "data" folder from [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4311814.svg)](https://doi.org/10.5281/zenodo.4311814), and place this folder into the repository's root directory!"
+3. In the command line, type:
 
 ```bash
 cd neuromorphic-networks
 conda env create -f environment.yml
 conda activate rcomputing
 ```
+
+3. Then, follow these steps sequentially (i.e., first "Run simulations", then "Compile results" and then "Analyses and Figures"). 
 
 ### 1. Run simulations
 ```bash
