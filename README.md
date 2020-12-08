@@ -23,7 +23,7 @@ conda activate rcomputing
 
 ### 1. Run simulations
 ```bash
-python scripts/01_rc_workflow/1_rc_workflow.py
+python scripts/01_rc_workflow/1_run_rc_workflow.py
 
 python scripts/01_rc_workflow/2_get_network_properties.py
 ```
