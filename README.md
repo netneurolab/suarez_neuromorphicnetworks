@@ -13,8 +13,8 @@ We've tried to document the various aspects of this repository with a whole bunc
 First, you'll need to make sure you have installed the appropriate software packages, and have downloaded the appropriate data files. 
 
 1. Clone the [neuromorphic-networks] (https://github.com/estefanysuarez/neuromorphic-networks) repository.
-2. Download the "data" folder from [Here] () and place this folder into this repository's root directory.
-3. [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4311814.svg)](https://doi.org/10.5281/zenodo.4311814)
+2. Download the "data" folder [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4311814.svg)](https://doi.org/10.5281/zenodo.4311814)
+
 Once you've done that, you can get going with the following:
 
 ```bash
