@@ -21,15 +21,15 @@ conda env create -f environment.yml
 conda activate rcomputing
 ```
 
-### "1. Run simulations"
+### 1. Run simulations
 python scripts/01_rc_workflow/1_rc_workflow.py
 python scripts/01_rc_workflow/2_get_network_properties.py
 
-### "2. Compile results"
+### 2. Compile results
 python scripts/01_fetch_results/fetch_task_results.py
 python scripts/01_rc_workflow/fetch_net_props_results.py
 
-### "3. Analyses and figures"
+### 3. Analyses and figures
 python scripts/03_analysis/figX.py
 
 (replace X by the number of the figure)
