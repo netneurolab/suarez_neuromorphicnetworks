@@ -12,7 +12,7 @@ We've tried to document the various aspects of this repository with this README 
 
 First, you'll need to make sure you have installed the appropriate software packages, and have downloaded the appropriate data files. 
 
-1. git clone [suarez_neuromorphicnetworks](https://github.com/estefanysuarez/neuromorphic-networks) repository.
+1. git clone the [suarez_neuromorphicnetworks](https://github.com/estefanysuarez/neuromorphic-networks) repository.
 2. Download the "data" folder from [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4311814.svg)](https://doi.org/10.5281/zenodo.4311814), and place this folder into the repository's root directory!"
 
 ```bash
@@ -41,7 +41,7 @@ python scripts/03_analysis/figX.py
 (replace X by the number of the figure)
 
 ## "How to only the analyses?"
-1. git clone [suarez_neuromorphicnetworks](https://github.com/estefanysuarez/neuromorphic-networks) repository.
+1. git clone the [suarez_neuromorphicnetworks](https://github.com/estefanysuarez/neuromorphic-networks) repository.
 2. Download the "data" and "proc_results" folders from [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4311814.svg)](https://doi.org/10.5281/zenodo.4311814), and place them folder into the repository's root directory!"
 
 To run the analysis presented in Figure "X" of the manuscript, you just need to run:
