@@ -8,7 +8,7 @@ This repository contains code for the manuscript "[Learning function from struct
 We investigated the link between macroscale connectivity, and the computational properties that emerge from network dynamics in the human connectome.
 We've tried to document the various aspects of this repository with a whole bunch of README files, so feel free to jump around and check things out.
 
-## "How to run the things?"
+## "How to run the things from scratch?"
 
 First, you'll need to make sure you have installed the appropriate software packages, and have downloaded the appropriate data files. 
 
