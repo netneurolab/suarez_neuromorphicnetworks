@@ -1,4 +1,4 @@
-# Learning function from structure in neuromorphic-networks
+# Learning function from structure in neuromorphic networks
 
 
 ## "What's in this repository?"
