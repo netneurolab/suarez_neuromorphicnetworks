@@ -17,7 +17,7 @@ First, you'll need to make sure you have installed the appropriate software pack
 3. In the command line, type:
 
 ```bash
-cd neuromorphic-networks
+cd suarez_neuromorphicnetworks
 conda env create -f environment.yml
 conda activate rcomputing
 ```
