@@ -22,7 +22,14 @@ conda env create -f environment.yml
 conda activate rcomputing
 ```
 
-3. Then, follow these steps sequentially (i.e., first "Run simulations", then "Compile results" and then "Analyses and Figures"). 
+4. Git clone [reservoir](https://github.com/estefanysuarez/reservoir.git) repository.
+5. And install it:
+```bash
+cd reservoir
+pip install .
+```
+
+4. Then, follow these steps sequentially (i.e., first "Run simulations", then "Compile results" and then "Analyses and Figures"). 
 
 ### Step 1. Run simulations
 ```bash
