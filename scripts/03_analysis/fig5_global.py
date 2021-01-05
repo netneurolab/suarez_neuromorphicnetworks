@@ -22,7 +22,7 @@ import seaborn as sns
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-CONNECTOME = 'human_250'
+CONNECTOME = 'human_500'
 CLASS = 'functional' #'functional' 'cytoarch'
 INPUTS = 'subctx'
 ANALYSIS = 'reliability' # 'significance' 'reproducibility' 'reliability' 'subj_level'
