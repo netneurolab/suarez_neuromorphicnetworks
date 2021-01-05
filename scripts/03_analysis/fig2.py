@@ -24,7 +24,7 @@ from plotting import plotting
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-CONNECTOME = 'human_250'
+CONNECTOME = 'human_500'
 CLASS = 'functional' #'functional' 'cytoarch'
 INPUTS = 'subctx'  #'subctx' 'thalamus'
 
