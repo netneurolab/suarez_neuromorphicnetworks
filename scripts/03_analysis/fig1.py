@@ -17,7 +17,7 @@ from plotting import plot_tasks
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-CONNECTOME = 'human_250'
+CONNECTOME = 'human_500'
 CLASS = 'functional' #'functional' 'cytoarch'
 ANALYSIS   = 'reliability' # 'reliability' 'reproducibility' 'significance' 'spintest' 'subj_level'
 INPUTS = 'subctx'
