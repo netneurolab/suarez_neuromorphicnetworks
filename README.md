@@ -23,7 +23,7 @@ conda activate rcomputing
 ```
 
 4. Git clone [reservoir](https://github.com/estefanysuarez/reservoir.git) repository.
-5. And install it:
+5. And install it in the newly created environment:
 ```bash
 cd reservoir
 pip install .
