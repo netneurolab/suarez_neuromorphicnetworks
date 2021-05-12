@@ -22,7 +22,8 @@ import seaborn as sns
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-CONNECTOME = 'human_250'
+TASK = 'memory_capacity'
+CONNECTOME = 'human_500'
 CLASS = 'functional' #'functional' 'cytoarch'
 INPUTS = 'subctx'
 ANALYSIS = 'reliability' # 'significance' 'reproducibility' 'reliability' 'subj_level'
@@ -34,7 +35,7 @@ ANALYSIS = 'reliability' # 'significance' 'reproducibility' 'reliability' 'subj_
 PROJ_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROC_RES_DIR = os.path.join(PROJ_DIR, 'proc_results')
 
-RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
+RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', TASK, ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
 NET_PROP_DIR = os.path.join(PROC_RES_DIR, 'net_props_results', ANALYSIS, f'scale{CONNECTOME[-3:]}')
 
 
@@ -139,6 +140,6 @@ for i, prop in enumerate(net_props):
 
         sns.despine(offset=10, trim=False)
 
-    fig.savefig(fname=os.path.join(f'C:/Users/User/Dropbox/figures_RC/eps/{prop}.eps'), transparent=True, bbox_inches='tight', dpi=300)
+#    fig.savefig(fname=os.path.join(f'C:/Users/User/Dropbox/figures_RC/eps/{prop}.eps'), transparent=True, bbox_inches='tight', dpi=300)
     plt.show()
     plt.close()

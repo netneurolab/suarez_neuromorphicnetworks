@@ -23,7 +23,7 @@ from plotting import (plotting, plot_tasks)
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-TASK = 'memory_capacity' #'pattern_recognition'
+TASK = 'memory_capacity'
 CONNECTOME = 'human_500'
 CLASS = 'functional' #'functional' 'cytoarch'
 INPUTS = 'subctx'
@@ -49,15 +49,26 @@ def load_avg_scores_per_class(analysis, dynamics, coding):
 # PI - AVG SCORE ACROSS ALPHA PER CLASS - PER REGIME
 # ----------------------------------------------------------------------------------------------------------------------
 # load data
-ANALYSES = ['reliability', 'significance', 'spintest']
+rsn_labels = np.array(['VIS', 'SM', 'DA', 'VA', 'LIM', 'FP', 'DMN'])
+ANALYSES = ['reliability', 'significance_unpert']
 DYNAMICS = ['stable', 'edge_chaos', 'chaos']
 
 df_rsn_scores = []
 for analysis in ANALYSES:
     for dyn_regime in DYNAMICS:
-        scores = load_avg_scores_per_class(analysis, dyn_regime, 'encoding')
-        scores['dyn_regime'] = dyn_regime
-        df_rsn_scores.append(scores)
+        
+        if analysis == 'significance_unpert':
+            for label in rsn_labels:
+                scores = load_avg_scores_per_class(f'{analysis}_{label}', dyn_regime, 'encoding')
+                scores['dyn_regime'] = dyn_regime
+#                scores.drop('analysis')
+                scores['analysis'] = 'significance'
+                df_rsn_scores.append(scores)
+
+        else:
+            scores = load_avg_scores_per_class(analysis, dyn_regime, 'encoding')
+            scores['dyn_regime'] = dyn_regime
+            df_rsn_scores.append(scores)
 
 df_rsn_scores = pd.concat(df_rsn_scores)
 df_rsn_scores = df_rsn_scores.query("sample_id <= 999").reset_index(drop=True)
@@ -81,12 +92,12 @@ for dyn_regime in DYNAMICS:
 
     df = df_rsn_scores.loc[df_rsn_scores.dyn_regime == dyn_regime, :]
 
-#    if dyn_regime == 'chaos':
-#        ylim = (0.0, 0.5) #(0.2, 0.75)  #
-#        y_major_loc = 0.1
-#    else:
-#        ylim = (0.5, 1.0)
-#        y_major_loc = 0.1
+    if dyn_regime == 'chaos':
+        ylim = (0.0, 0.5) #(0.2, 0.75)  #
+        y_major_loc = 0.1
+    else:
+        ylim = (0.5, 1.0)
+        y_major_loc = 0.1
 
     plotting.boxplot(x='class', y=f'{score}',
                      df=df,
@@ -97,9 +108,9 @@ for dyn_regime in DYNAMICS:
                      orient='v',
                      width=0.7, #0.8
                      xlim=None,
-#                     ylim=ylim, #None,
-#                     y_major_loc=y_major_loc,
-                     legend=True,
+                     ylim=ylim, #None,
+                     y_major_loc=y_major_loc,
+                     legend=False,
                      fig_name=f'brain_vs_nulls_vs_rsn_{CONNECTOME}_{dyn_regime}',
                      figsize=(20,8), #12,12
                      showfliers=True,
@@ -197,6 +208,7 @@ for dyn_regime in DYNAMICS:
     df = df_rsn_scores.loc[df_rsn_scores.dyn_regime == dyn_regime, :]
     enc_pval_spint, enc_effs_spint, enc_pval_rewir, enc_effs_rewir = statistical_test(df.copy(), score)
 
+
     # ----------------------
     print("\nENCODING - Brain vs Rewired - avg across alpha")
     print(class_labels)
@@ -244,7 +256,7 @@ for dyn_regime in DYNAMICS:
 #%% --------------------------------------------------------------------------------------------------------------------
 # PIV - BETWEEN NETWORK COMPARISON - AVG SCORES ACROSS ALPHA PER CLASS - PER REGIME
 # ----------------------------------------------------------------------------------------------------------------------
-# # load data
+ # load data
 DYNAMICS = ['stable', 'edge_chaos', 'chaos']#, 'edge+chaos']
 score = 'performance' #'capacity', 'performance'
 
@@ -258,8 +270,6 @@ for dyn_regime in DYNAMICS:
     NET_PROP_DIR = os.path.join(PROC_RES_DIR, 'net_props_results', 'reliability', 'scale' + CONNECTOME[-3:])
 
     df_net_props = pd.read_csv(os.path.join(NET_PROP_DIR, f'{CLASS}_local_net_props.csv'), index_col=0)
-#    df_net_props = pd.read_csv(os.path.join(NET_PROP_DIR, f'{CLASS}_local_cliques.csv'), index_col=0)
-
     df = pd.merge(df_scores, df_net_props,
                   on=['sample_id', 'class'],
                   left_index=True,
@@ -267,16 +277,13 @@ for dyn_regime in DYNAMICS:
                   ).reset_index(drop=True)
     
     df['rel_density'] = (df['rel_density']-min(df['rel_density']))/(max(df['rel_density'])-min(df['rel_density']))
-#    k = 10
-#    df[f'{k}-clique'] = (df[f'{k}-clique']-min(df[f'{k}-clique']))/(max(df[f'{k}-clique'])-min(df[f'{k}-clique']))
-
     # ------------------
 
     plot_tasks.bxplt_scores(df.copy(),
                             score,
                             scale=True,
                             minmax=None,
-                            norm_score_by='rel_density', #'rel_density', 'n_nodes'  f'{k}-clique'
+                            norm_score_by='rel_density', #'n_nodes', #'rel_density',
                             title=dyn_regime,
                             width=0.4,
                             figsize=(8,8),

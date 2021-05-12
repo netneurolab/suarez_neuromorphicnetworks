@@ -17,9 +17,10 @@ from plotting import plot_tasks
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-CONNECTOME = 'human_250'
+TASK = 'memory_capacity'
+CONNECTOME = 'human_500'
 CLASS = 'functional' #'functional' 'cytoarch'
-ANALYSIS   = 'reliability' # 'reliability' 'reproducibility' 'significance' 'spintest' 'subj_level'
+ANALYSIS   = 'reliability_correct' # 'reliability' 'reproducibility' 'significance' 'spintest' 'subj_level'
 INPUTS = 'subctx'
 
 
@@ -28,7 +29,7 @@ INPUTS = 'subctx'
 # ----------------------------------------------------------------------------------------------------------------------
 PROJ_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROC_RES_DIR = os.path.join(PROJ_DIR, 'proc_results')
-RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
+RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', TASK, ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
 
 
 #%% --------------------------------------------------------------------------------------------------------------------
@@ -61,6 +62,27 @@ plot_tasks.lnplt_scores_vs_alpha(df_encoding.copy(),
                                  x_major_loc=0.2,
                                  ylim=(0,1.1),
                                  xlim=(0.5,1.5),
+                                 legend=True,
+                                 figsize=(20,8),
+                                 )
+
+score = 'capacity'
+plot_tasks.lnplt_scores_vs_alpha(df_encoding.copy(),
+                                 score,
+                                 include_alpha=include_alpha,
+                                 scale=True,
+                                 minmax=None,
+                                 ci='sd',
+                                 err_style='band',
+                                 markers=True,
+                                 marker='o',
+                                 markersize=12,
+                                 linewidth=2,
+                                 dashes=False,
+                                 x_major_loc=0.2,
+                                 ylim=(0,1.1),
+                                 xlim=(0.5,1.5),
                                  legend=False,
                                  figsize=(20,8),
                                  )
+

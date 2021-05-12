@@ -20,7 +20,8 @@ from plotting import plot_tasks
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-CONNECTOME = 'human_250'
+TASK = 'memory_capacity'
+CONNECTOME = 'human_500'
 CLASS = 'functional' #'functional' 'cytoarch'
 INPUTS = 'subctx'
 ANALYSIS = 'reliability' # 'reliability' 'significance' 'spintest'
@@ -37,7 +38,7 @@ PROC_RES_DIR = os.path.join(PROJ_DIR, 'proc_results')
 
 RES_CONN_DIR = os.path.join(RAW_RES_DIR, 'conn_results', ANALYSIS, f'scale{CONNECTOME[-3:]}')
 NET_PROP_DIR = os.path.join(PROC_RES_DIR, 'net_props_results', ANALYSIS, f'scale{CONNECTOME[-3:]}')
-RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
+RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', TASK, ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
 
 
 #%% --------------------------------------------------------------------------------------------------------------------
@@ -63,7 +64,7 @@ elif CLASS == 'cytoarch':
 # ----------------------------------------------------------------------------------------------------------------------
 def stack_networks():
     conn_bin = []
-    for sample_id in range(10):
+    for sample_id in range(1000):
 
         print('\n ----------------------------sample_id:  ' + str(sample_id))
 

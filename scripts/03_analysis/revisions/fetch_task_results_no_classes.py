@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed May 12 12:26:58 2021
+Created on Mon Feb 22 11:11:04 2021
 
 @author: Estefany Suarez
 """
@@ -25,7 +25,7 @@ INPUTS = 'subctx' #'thalamus'
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL STATIC VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-PROJ_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROJ_DIR = 'E:/P3_RC/neuromorphic_networks/' #os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_DIR = os.path.join(PROJ_DIR, 'data')
 RAW_RES_DIR = os.path.join(PROJ_DIR, 'raw_results')
 PROC_RES_DIR = os.path.join(PROJ_DIR, 'proc_results')
@@ -48,7 +48,7 @@ def sort_class_labels(class_labels):
         return class_labels
 
 
-def concatenate_tsk_results(path, partition, coding, scores2return, include_alpha, n_samples=1000):
+def concatenate_tsk_results(path, partition, coding, scores2return, include_alpha, n_samples=1000, clase=None):
 
     df_scores = []
     df_avg_scores_per_class = []
@@ -57,8 +57,10 @@ def concatenate_tsk_results(path, partition, coding, scores2return, include_alph
 
         print(f'sample_id:  {sample_id}')
         succes_sample = True
+        
         try:
             scores = pd.read_csv(os.path.join(path, f'{partition}_{coding}_score_{sample_id}.csv')).reset_index(drop=True)
+            if ('class' not in scores.columns) and (clase is not None): scores['class'] = clase                
 
         except:
             succes_sample = False
@@ -166,7 +168,7 @@ def get_avg_scores_per_alpha(df_scores, include_alpha, coding='encoding'):
 
 
 #%% --------------------------------------------------------------------------------------------------------------------
-def concat_tsk_results(connectome, analysis, dynamics, coding='encoding', n_samples=1000):
+def concat_tsk_results(connectome, analysis, dynamics, coding='encoding', n_samples=1000, clase=None):
     """
         connectome (str): 'human_250', 'human_500'
         analysis (str): 'reliability', 'significance', 'spintest'
@@ -204,6 +206,7 @@ def concat_tsk_results(connectome, analysis, dynamics, coding='encoding', n_samp
                                   scores2return=scores2return,
                                   include_alpha=include_alpha[dynamics],
                                   n_samples=n_samples,
+                                  clase=clase
                                   )
 
     for coding_score, df in res.items():
@@ -215,14 +218,14 @@ def concat_tsk_results(connectome, analysis, dynamics, coding='encoding', n_samp
 if __name__ == '__main__':
 
     CONNECTOMES = [
-                    'human_250',
+#                   'human_250',
                     'human_500',
                   ]
 
     ANALYSES   =  {
-                   'reliability':1000,
-                   'significance':1000,
-                   'spintest':1000,
+                   'reliability_thr':1000,
+                   'significance_thr':1000,
+                   'spintest_thr':1000,
                    }
 
     DYNAMICS   =  [
@@ -231,19 +234,25 @@ if __name__ == '__main__':
                    'chaos',
                   ]
 
-    for connectome in CONNECTOMES[::-1]:
-       for analysis, n_samples in ANALYSES.items():
-           for dyn_regime in DYNAMICS:
-               concat_tsk_results(connectome,
-                                  analysis,
-                                  dyn_regime,
-                                  coding='encoding',
-                                  n_samples=n_samples
-                                  )
 
-               concat_tsk_results(connectome,
-                                  analysis,
-                                  dyn_regime,
-                                  coding='decoding',
-                                  n_samples=n_samples
-                                  )
+    class_labels = np.array(['VIS', 'SM', 'DA', 'VA', 'LIM', 'FP', 'DMN'])
+    
+    for i, clase in enumerate(class_labels[:1]):
+        for connectome in CONNECTOMES[::-1]:
+           for analysis, n_samples in ANALYSES.items():
+               for dyn_regime in DYNAMICS:
+                   
+                   concat_tsk_results(connectome,
+                                      f'{analysis}',
+                                      dyn_regime,
+                                      coding='encoding',
+                                      n_samples=n_samples,
+                                      clase=clase
+                                      )
+
+#                   concat_tsk_results(connectome,
+#                                      analysis,
+#                                      dyn_regime,
+#                                      coding='decoding',
+#                                      n_samples=n_samples
+#                                      )

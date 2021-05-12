@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Sep 22 12:18:01 2020
+Created on Mon Jul  6 11:06:24 2020
 
 @author: Estefany Suarez
 """
@@ -13,18 +13,21 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 import numpy as np
 import pandas as pd
 from scipy import stats
-from statsmodels.stats.multitest import multipletests
+from scipy.spatial import distance
 
 import seaborn as sns
+import matplotlib.pyplot as plt
+from matplotlib.ticker import (MultipleLocator)
 
-from plotting import (plotting, plot_tasks)
+from plotting import plotting
 
 
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-CONNECTOME = 'human_250'
-CLASS = 'functional' #'functional' 'cytoarch'
+TASK = 'pattern_recognition' #'memory_capacity' 'pattern_recognition'
+CONNECTOME = 'human_500'
+CLASS = 'functional'
 INPUTS = 'subctx'
 
 
@@ -32,247 +35,204 @@ INPUTS = 'subctx'
 # DIRECTORIES
 # ----------------------------------------------------------------------------------------------------------------------
 PROJ_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DATA_DIR = os.path.join(PROJ_DIR, 'data')
+
+RAW_RES_DIR = f'F:/P3_RC/{TASK}_results_full'#os.path.join(PROJ_DIR, 'raw_results')
 PROC_RES_DIR = os.path.join(PROJ_DIR, 'proc_results')
 
+coords = np.load(os.path.join(DATA_DIR, 'coords', f'coords_{CONNECTOME}.npy'))
+dist = distance.cdist(coords, coords, 'euclidean')
 
 #%% --------------------------------------------------------------------------------------------------------------------
 # IMPORT DATA FUNCTIONS
 # ----------------------------------------------------------------------------------------------------------------------
-def load_avg_scores_per_class(analysis, dynamics, coding):
-    RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', analysis, f'{INPUTS}_scale{CONNECTOME[-3:]}')
-    avg_scores = pd.read_csv(os.path.join(RES_TSK_DIR, f'{CLASS}_avg_{coding}_{dynamics}.csv'))
+def load_avg_scores_per_alpha(analysis, coding):
+    RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', TASK, analysis, f'{INPUTS}_scale{CONNECTOME[-3:]}')
+    avg_scores = pd.read_csv(os.path.join(RES_TSK_DIR, f'{CLASS}_avg_{coding}.csv'))
     return avg_scores
 
 
 #%% --------------------------------------------------------------------------------------------------------------------
-# PI - AVG SCORE ACROSS ALPHA PER CLASS - PER REGIME
+# PI - ESTIMATING WIRING COST
 # ----------------------------------------------------------------------------------------------------------------------
 # load data
-ANALYSES = ['reliability', 'significance', 'spintest']
-DYNAMICS = ['stable', 'edge_chaos', 'chaos']
+score = 'performance'
+ANALYSES = ['reliability', 'significance']
 
-df_rsn_scores = []
+df_brain_scores = []
 for analysis in ANALYSES:
-    for dyn_regime in DYNAMICS:
-        scores = load_avg_scores_per_class(analysis, dyn_regime, 'encoding')
-        scores['dyn_regime'] = dyn_regime
-        df_rsn_scores.append(scores)
 
-df_rsn_scores = pd.concat(df_rsn_scores)
-df_rsn_scores = df_rsn_scores.query("sample_id <= 999").reset_index(drop=True)
+    if analysis == 'reliability':   conn_fname = 'consensus'
+    elif analysis == 'significance':  conn_fname = 'rand_mio'
 
-# scale avg encoding scores
-score = 'performance'
-min_score = np.min(df_rsn_scores[score].values)
-max_score = np.max(df_rsn_scores[score].values)
-df_rsn_scores[score] = (df_rsn_scores[score]-min_score)/(max_score-min_score)
+    avg_scores = load_avg_scores_per_alpha(analysis, 'encoding')
+    avg_scores['cost'] = 0
 
+    # estimate wiring cost for every sample
+    for sample_id in np.unique(avg_scores.sample_id):
 
-#%%
-# boxplot
-score = 'performance'
-DYNAMICS = ['stable', 'edge_chaos', 'chaos']
-class_labels = plot_tasks.sort_class_labels(np.unique(df_rsn_scores['class']))
+        conn_wei = np.load(os.path.join(RAW_RES_DIR, 'conn_results', analysis, f'scale{CONNECTOME[-3:]}', f'{conn_fname}_{sample_id}.npy'))
+        conn_bin = conn_wei.copy().astype(bool).astype(int)
 
-for dyn_regime in DYNAMICS:
+        dist_ = (dist.copy()*conn_bin)[np.tril_indices_from(conn_bin, -1)]
+        dist_ = dist_[np.nonzero(dist_)]
 
-    print(f'---------------------------------------  {dyn_regime}  ---------------------------------------')
+        wiring_density = (conn_wei*conn_bin)[np.tril_indices_from(conn_wei, -1)]
+        wiring_density = wiring_density[np.nonzero(wiring_density)]
 
-    df = df_rsn_scores.loc[df_rsn_scores.dyn_regime == dyn_regime, :]
+        cost = np.dot(dist_, wiring_density)
 
-    if dyn_regime == 'chaos':
-        ylim = (0.0, 0.5) #(0.2, 0.75)  #
-        y_major_loc = 0.1
-    else:
-        ylim = (0.5, 1.0)
-        y_major_loc = 0.1
+        avg_scores.loc[avg_scores.sample_id == sample_id, 'cost'] = cost
 
-    plotting.boxplot(x='class', y=f'{score}',
-                     df=df,
-                     palette=sns.color_palette('husl', 5),
-                     suptitle=f'encoding - {dyn_regime}',
-                     hue='analysis',
-                     order=None,
-                     orient='v',
-                     width=0.7, #0.8
-                     xlim=None,
-                     ylim=ylim, #None,
-                     y_major_loc=y_major_loc,
-                     legend=True,
-                     fig_name=f'brain_vs_nulls_vs_rsn_{CONNECTOME}_{dyn_regime}',
-                     figsize=(20,8), #12,12
-                     showfliers=True,
-                     )
+    df_brain_scores.append(avg_scores)
+
+df_brain_scores = pd.concat(df_brain_scores)
+
+# estimate and scale score to wiring cost ratio
+df_brain_scores['score-to-wiring_cost ratio'] = df_brain_scores[score]/df_brain_scores['cost']
+
+min_score = np.min(df_brain_scores['score-to-wiring_cost ratio'].values)
+max_score = np.max(df_brain_scores['score-to-wiring_cost ratio'].values)
+df_brain_scores['score-to-wiring_cost ratio'] = (df_brain_scores['score-to-wiring_cost ratio']-min_score)/(max_score-min_score)
+
+#%% --------------------------------------------------------------------------------------------------------------------
+# PII - SCORE TO WIRING COST RATIO
+# ----------------------------------------------------------------------------------------------------------------------
+score = 'score-to-wiring_cost ratio'
+include_alpha = [0.3, 0.5, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 2.0, 2.5, 3.0, 3.5]
+
+df_brain_scores = pd.concat([df_brain_scores.loc[np.isclose(df_brain_scores['alpha'], alpha), :] for alpha in include_alpha])\
+                    .reset_index(drop=True)
+
+plotting.boxplot(x='alpha', y=score, df=df_brain_scores.copy(),
+                 palette=sns.color_palette('husl', 5),
+                 hue='analysis',
+                 order=None,
+                 xlim=None,
+                 ylim=(0,1),
+                 legend=True,
+                 width=0.8,
+                 fig_name=f'brain_vs_nulls_vs_alpha_{CONNECTOME}_{INPUTS}_score_to_wircost',
+                 figsize=(22,8),
+                 showfliers=True,
+                 )
 
 
 #%% --------------------------------------------------------------------------------------------------------------------
 # PIII - STATISTICAL TESTS
 # ----------------------------------------------------------------------------------------------------------------------
-def statistical_test(df, score, fdr_corr=True):
+def cohen_d_2samp(x,y):
+    nx = len(x)
+    ny = len(y)
+    dof = nx + ny - 2
 
-    def cohen_d_2samp(x,y):
-        nx = len(x)
-        ny = len(y)
-        dof = nx + ny - 2
-
-        # 2 independent sample t test
-        return (np.mean(x) - np.mean(y)) / np.sqrt(((nx-1)*np.std(x, ddof=1) ** 2 + (ny-1)*np.std(y, ddof=1) ** 2) / dof)
-
-    class_labels = plot_tasks.sort_class_labels(np.unique(df['class']))
-
-    pval_rewir = []
-    effs_rewir = []
-
-    pval_spint = []
-    effs_spint = []
-
-    for clase in class_labels:
-
-        scores = df.loc[df['class'] == clase, :]
-
-        # reliability scores
-        brain = scores.loc[scores['analysis'] == 'reliability', score].values
-        rewire = scores.loc[scores['analysis'] == 'significance', score].values
-        spint = scores.loc[scores['analysis'] == 'spintest', score].values
-
-        # ----------------------------------------------------------------------------
-        # nonparametric Mann-Whitney U test
-        # rewired null model
-        u, pval = stats.mannwhitneyu(brain,
-                                     rewire,
-                                     alternative='two-sided'
-                                     )
-        eff_size = u/(len(brain)*len(rewire))
-        if fdr_corr:pval = multipletests(pval, 0.05, 'bonferroni')[1].squeeze()
-
-        pval_rewir.append(pval)
-        effs_rewir.append(eff_size)
-
-        # spintest null model
-        u, pval = stats.mannwhitneyu(brain,
-                                     spint,
-                                     alternative='two-sided'
-                                     )
-        eff_size = u/(len(brain)*len(spint))
-        if fdr_corr:pval = multipletests(pval, 0.05, 'bonferroni')[1].squeeze()
-
-        pval_spint.append(pval)
-        effs_spint.append(eff_size)
+    # 2 independent sample t test
+    return (np.mean(x) - np.mean(y)) / np.sqrt(((nx-1)*np.std(x, ddof=1) ** 2 + (ny-1)*np.std(y, ddof=1) ** 2) / dof)
 
 
-#        # ----------------------------------------------------------------------------
-#        # parametric t-test
-#        # rewired null model
-#        _, pval = stats.ttest_ind(brain, rewire, equal_var=False)
-#        eff_size = cohen_d_2samp(brain, rewire)
-#        if fdr_corr:pval = multipletests(pval, 0.05, 'bonferroni')[1].squeeze()
-#
-#        pval_rewir.append(pval)
-#        effs_rewir.append(eff_size)
-#
-#
-#        # spintest null model
-#        _, pval = stats.ttest_ind(brain, spint, equal_var=False)
-#        eff_size = cohen_d_2samp(brain, spint)
-#        if fdr_corr:pval = multipletests(pval, 0.05, 'bonferroni')[1].squeeze()
-#
-#        pval_spint.append(pval)
-#        effs_spint.append(eff_size)
-#
+#statistical tests
+score = 'score-to-wiring_cost ratio'
+include_alpha = [1.0] # [0.3, 0.5, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 2.0, 2.5, 3.0, 3.5]
+for alpha in include_alpha:
 
-    pval_spint = [float(p) for p in pval_spint]
-    pval_rewir = [float(p) for p in pval_rewir]
+    print(f'\n---------------------------------------alpha: ... {alpha} ---------------------------------------')
 
-    return pval_spint, effs_spint, pval_rewir, effs_rewir
+    brain = df_brain_scores.loc[(df_brain_scores.analysis == 'reliability') & (np.isclose(df_brain_scores['alpha'], alpha))]
+    rewir = df_brain_scores.loc[(df_brain_scores.analysis == 'significance') & (np.isclose(df_brain_scores['alpha'], alpha))]
+    spint = df_brain_scores.loc[(df_brain_scores.analysis == 'spintest') & (np.isclose(df_brain_scores['alpha'], alpha))]
 
+    print('Two-sample Wilcoxon-Mann-Whitney rank-sum test:')
+    print(f' Brain median: {np.nanmedian(brain[score].values)}')
+    print(f' Rewired median: {np.nanmedian(rewir[score].values)}')
 
-score = 'performance'
-DYNAMICS = ['stable', 'edge_chaos', 'chaos']
-class_labels = plot_tasks.sort_class_labels(np.unique(df_rsn_scores['class']))
-for dyn_regime in DYNAMICS:
+    # ----------------------------------------------------------------------------
+    # nonparametric Mann-Whitney U test
+    # rewired null model
+    Urewir, mannu_p_rewir = stats.mannwhitneyu(brain[score].values[~np.isnan(brain[score].values)],
+                                               rewir[score].values[~np.isnan(rewir[score].values)],
+                                               alternative='two-sided'
+                                               )
+    Urewir = Urewir/(1000*1000)
+    print(f'\tmannU. pval - rewired:  {mannu_p_rewir}    Effect size: {Urewir}')
 
-    print(f'---------------------------------------  {dyn_regime}  ---------------------------------------')
+    # ----------------------------------------------------------------------------
+    # parametric t-test
+    # rewired null model
+    print('\n')
+    print('Two-sample student t-test:')
+    print(f' Brain mean: {np.nanmean(brain.performance.values)}')
+    print(f' Rewired mean: {np.nanmean(rewir.performance.values)}')
 
-    df = df_rsn_scores.loc[df_rsn_scores.dyn_regime == dyn_regime, :]
-    enc_pval_spint, enc_effs_spint, enc_pval_rewir, enc_effs_rewir = statistical_test(df.copy(), score)
+    _, ttest_p_rewir = stats.ttest_ind(np.array(brain[score].values[~np.isnan(brain[score].values)]),
+                                       np.array(rewir[score].values[~np.isnan(rewir[score].values)]),
+                                       equal_var=False
+                                       )
+    eff_size_rewir = cohen_d_2samp(brain[score].values[~np.isnan(brain[score].values)], rewir[score].values[~np.isnan(rewir[score].values)])
+    print(f'\tttest. pval - rewired:  {ttest_p_rewir}       Effect size:{eff_size_rewir}')
 
+    # ----------------------------------------------------------------------------
+    # visual inspection
+    tmp_df_alpha = df_brain_scores.loc[np.isclose(df_brain_scores['alpha'], alpha), :]
 
-    # ----------------------
-    print("\nENCODING - Brain vs Rewired - avg across alpha")
-    print(class_labels)
-    print(enc_pval_rewir)
-#    print(enc_effs_rewir)
-#
-#    df_rewired = df.loc[df.analysis != 'spintest']
-#    sns.set(style="ticks", font_scale=2.0)
-#    fig = plt.figure(figsize=(25, 8))
-#    ax = plt.subplot(111)
-#    sns.violinplot(x='class', y=f'{score}',
-#                  data=df_rewired,
-#                  hue='analysis',
-#                  palette='pastel',
-#                  split=True
-#                  )
-#    ax.set_ylim(0,1.0)
-#    sns.despine(offset=10, trim=True)
-#    plt.show()
-#    plt.close()
+    sns.set(style="ticks", font_scale=2.0)
+    fig = plt.figure(figsize=(13,7))
+    ax = plt.subplot(111)
 
+    for analysis in ANALYSES:
+       sns.distplot(tmp_df_alpha.loc[tmp_df_alpha.analysis == analysis, score].values,
+                    bins=50,
+                    hist=False,
+                    kde=True,
+                    kde_kws={'shade':True},
+                    label=analysis
+                    )
 
-    print("\nENCODING - Brain vs Spintest - avg across alpha")
-    print(class_labels)
-    print(enc_pval_spint)
-#    print(enc_effs_spint)
-#
-#    df_spintest = df.loc[df.analysis != 'significance']
-#    sns.set(style="ticks", font_scale=2.0)
-#    fig = plt.figure(figsize=(25, 8))
-#    ax = plt.subplot(111)
-#    sns.violinplot(x='class', y=f'{score}',
-#                  data=df_spintest,
-#                  hue='analysis',
-#                  palette='pastel',
-#                  split=True
-#                  )
-#    ax.set_ylim(0,1.0)
-#    sns.despine(offset=10, trim=True)
-#    plt.show()
-#    plt.close()
+    ax.xaxis.set_major_locator(MultipleLocator(0.1))
+    ax.get_yaxis().set_visible(False)
+    ax.legend(fontsize=15, frameon=False, ncol=1, loc='upper right')
+    plt.title('memory capacity - to - wiring cost ratio')
 
+    sns.despine(offset=10, left=True, trim=True)
+#    fig.savefig(fname=os.path.join('C:/Users/User/Dropbox/figures_RC/eps', f'dist_brain_{analysis}_{CONNECTOME}.eps'), transparent=True, bbox_inches='tight', dpi=300)
+    plt.show()
+    plt.close()
 
 
 #%% --------------------------------------------------------------------------------------------------------------------
-# PIV - BETWEEN NETWORK COMPARISON - AVG SCORES ACROSS ALPHA PER CLASS - PER REGIME
+# PII - VISUAL INSPECTION CONNECTION LENGTH DISTRIBUTION
 # ----------------------------------------------------------------------------------------------------------------------
-# # load data
-# DYNAMICS = ['stable', 'edge_chaos', 'chaos']#, 'edge+chaos']
-# score = 'performance' #'capacity', 'performance'
-#
-# for dyn_regime in DYNAMICS:
-#
-#     print(f'----------------{dyn_regime}-----------------')
-#
-#     df_scores = load_avg_scores_per_class('reliability', dyn_regime, 'encoding')
-#
-#     # ------------------
-#     NET_PROP_DIR = os.path.join(RES_DIR, 'net_props_local', 'reliability', 'scale' + CONNECTOME[-3:], CLASS)
-#
-#     df_net_props = pd.read_csv(os.path.join(NET_PROP_DIR, f'{CLASS}_net_props.csv'), index_col=0)
-#     df = pd.merge(df_scores, df_net_props,
-#                   on=['sample_id', 'class'],
-#                   left_index=True,
-#                   right_index=False
-#                   ).reset_index(drop=True)
-#
-#     df['rel_density'] = (df['rel_density']-min(df['rel_density']))/(max(df['rel_density'])-min(df['rel_density']))
-#     # ------------------
-#
-#     plot_tasks.bxplt_scores(df.copy(),
-#                             score,
-#                             scale=True,
-#                             minmax=None,
-#                             norm_score_by='rel_density',
-#                             title=dyn_regime,
-#                             width=0.4,
-#                             figsize=(8,8),
-#                             )
+# connection-length distribution for a single sample
+sample_ids = np.unique(avg_scores.sample_id)
+sample_id = np.random.choice(sample_ids, 1)[0]
+
+sns.set(style="ticks", font_scale=2.0)
+fig = plt.figure(figsize=(8,8)) #figsize=(15,7))  #
+ax = plt.subplot(111)
+for analysis in ANALYSES:
+
+    if analysis == 'reliability':   conn_fname = 'consensus'
+    elif analysis == 'significance':  conn_fname = 'rand_mio'
+
+    conn_wei = np.load(os.path.join(RAW_RES_DIR, 'conn_results', analysis, f'scale{CONNECTOME[-3:]}', f'{conn_fname}_{sample_id}.npy'))
+    conn_bin = conn_wei.copy().astype(bool).astype(int)
+    dist_ = (dist.copy()*conn_bin)[np.tril_indices_from(conn_bin, -1)]
+    dist_ = dist_[np.nonzero(dist_)]
+
+    sns.distplot(dist_,
+                 bins=50,
+                 hist=False,
+                 kde=True,
+                 kde_kws={'shade':True},
+                 label=analysis
+                 )
+
+ax.xaxis.set_major_locator(MultipleLocator(50))
+ax.set_xlim(0, 200)
+ax.get_yaxis().set_visible(False)
+ax.legend(fontsize=15, frameon=False, ncol=1, loc='upper right')
+plt.title('connection length distribution')
+
+sns.despine(offset=10, left=True, trim=True)
+#fig.savefig(fname=os.path.join('C:/Users/User/Dropbox/figures_RC/eps', f'dist_conn_length_{CONNECTOME}.eps'), transparent=True, bbox_inches='tight', dpi=300)
+plt.show()
+plt.close()

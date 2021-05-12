@@ -15,6 +15,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 from pathlib import Path
 import time
+import bct
 import numpy as np
 import pandas as pd
 import multiprocessing as mp
@@ -24,7 +25,7 @@ from scipy.linalg import eigh
 from scipy.spatial.distance import cdist
 
 from reservoir.network import nulls
-from reservoir.tasks import (io, coding, tasks)
+from reservoir.tasks import (io, coding)
 from reservoir.simulator import sim_lnm
 
 from netneurotools import networks
@@ -35,12 +36,12 @@ from netneurotools import networks
 TASK = 'sgnl_recon' #'sgnl_recon' 'pttn_recog'
 SPEC_TASK = 'mem_cap' #'mem_cap' 'nonlin_cap' 'fcn_app'
 TASK_REF = 'T1'
-FACTOR = 0.0001 #0.0001 0.001 0.01
+FACTOR = 0.1 #0.0001 0.001 0.01  This is the oneeee 0.0001
 
 INPUTS = 'subctx'
 CLASS = 'functional' #'functional' 'cytoarch'
 
-N_PROCESS = 10
+N_PROCESS = 40
 N_RUNS = 1000
 
 #%% --------------------------------------------------------------------------------------------------------------------
@@ -53,27 +54,57 @@ RAW_RES_DIR = os.path.join(PROJ_DIR, 'raw_results')
 #%% --------------------------------------------------------------------------------------------------------------------
 # FUNCTIONS
 # ----------------------------------------------------------------------------------------------------------------------
-def load_metada(connectome, include_subctx=False):
+def load_metada(connectome, include_subctx=False, community_detection=False, conn_name=None, iter_id=None, path_res_conn=None):
 
     ctx = np.load(os.path.join(DATA_DIR, 'cortical', 'cortical_' + connectome + '.npy'))
 
     if CLASS == 'functional':
         filename = CLASS
-        class_labels = np.array(['VIS', 'SM', 'DA', 'VA', 'LIM', 'FP', 'DMN'])
+        class_labels = np.array(['VIS', 'SM', 'DA', 'VA', 'LIM', 'FP', 'DMN', 'subctx'])
         class_mapping = np.load(os.path.join(DATA_DIR, 'rsn_mapping', 'rsn_' + connectome + '.npy'))
-        class_mapping_ctx = class_mapping[ctx == 1]
 
     elif CLASS == 'cytoarch':
         filename = CLASS
-        class_labels = np.array(['PM', 'AC1', 'AC2', 'PSS', 'PS', 'LIM', 'IC'])
+        class_labels = np.array(['PM', 'AC1', 'AC2', 'PSS', 'PS', 'LIM', 'IC', 'subctx'])
         class_mapping = np.load(os.path.join(DATA_DIR, 'cyto_mapping', 'cyto_' + connectome + '.npy'))
-        class_mapping_ctx = class_mapping[ctx == 1]
 
-    if include_subctx:
-        return filename, class_labels, class_mapping
+    if not community_detection:
+
+        if include_subctx:
+            return filename, class_labels, class_mapping
+
+        else:
+            return filename, class_labels[:-1], class_mapping[ctx == 1]
 
     else:
-        return filename, class_labels, class_mapping_ctx
+        if (iter_id is not None) and (conn_name is not None): mapp_file = f'class_mapping_{iter_id}.npy'
+
+        if not os.path.exists(os.path.join(path_res_conn, mapp_file)):
+            conn = np.load(os.path.join(path_res_conn, f'{conn_name}_{iter_id}.npy'))
+
+            class_mapping = np.array([np.where(class_labels == mapp)[0][0] for mapp in class_mapping])
+
+            if include_subctx:
+                ci, _ = bct.modularity.community_louvain(conn,
+                                                         gamma=1,
+                                                         ci=class_mapping,
+                                                         B='modularity',
+                                                         )
+                ci -= 1
+            else:
+                ci, _ = bct.modularity.community_louvain(conn[np.ix_(np.where(ctx==1)[0], np.where(ctx==1)[0])],
+                                                         gamma=1,
+                                                         ci=class_mapping[np.where(ctx==1)[0]],
+                                                         B='modularity',
+                                                         )
+                ci -= 1
+
+            np.save(os.path.join(path_res_conn, mapp_file), ci)
+
+        else:
+            ci = np.load(os.path.join(path_res_conn, mapp_file))
+
+        return filename, np.unique(ci), ci
 
 
 def consensus_network(connectome, coords, hemiid, path_res_conn, iter_id=None, sample=None, **kwargs):
@@ -114,69 +145,15 @@ def null_network(model_name, path_res_conn, iter_id=None, **kwargs):
 
     if not os.path.exists(os.path.join(path_res_conn, conn_file)):
 
-        new_conn = nulls.construct_null_model(type=model_name, **kwargs)
+        new_conn = nulls.construct_network_model(type=model_name, **kwargs)
 
         np.save(os.path.join(path_res_conn, conn_file), new_conn)
 
 
 def run_workflow(conn_name, connectome, path_res_conn, path_io, path_res_sim, path_res_tsk, \
-                 bin=False, input_nodes=None, output_nodes=None, readout_modules=None, \
+                 bin=False, input_nodes=None, output_nodes=None, class_labels=None, class_mapp=None, \
                  scores_file=None, iter_id=None, iter_conn=True, iter_io=False, iter_sim=False, \
-                 encode=True, decode=True, **kwargs):
-    """
-        Runs the full reservoir pipeline: loads and scales connectivity matrix,
-        generates input/output data for the task, simulates reservoir states,
-        and trains the readout module.
-
-        Parameters
-        ----------
-        conn_name: str, {'consensus', 'rand_mio'}
-            Specifies the name of the connectivity matrix file. 'consensus' for
-            reliability and spintest analyses, and 'rand_mio' for significance
-            analysis.
-
-        connectome: str, {human_500, human_250}
-            Specifies the scale of the conenctome
-
-        path_res_conn : str
-            Path to conenctivity matrix
-
-        path_io : str
-            Path to simulation results
-
-        path_res_sim : str
-            Path to simulation results
-
-        path_res_tsk : str
-            Path to task scores
-
-        bin : bool
-            If True, the binary matrix will be used
-
-        input,output nodes: (N,) list or numpy.darray
-            List or array that indicates the indexes of the input and output
-            nodes in the recurrent network.
-            N: number of input,output nodes in the network
-
-        readout_modules: (N, ) numpy.darray
-            Array that indicates the module at which each output node belongs
-            to. Modules can be int or str.
-            N: number of output nodes
-
-        scores_file : str, {'functional', 'cytoarch'}
-            Name of the partition used
-
-        iter_id : int
-            Number/name of the iteration
-
-        iter_{conn,io,sim} : bool
-            If True, specific instances (i.e., connectivity, input/output data,
-            network states) related to the iteration indicated by iter_id will
-            be used.
-
-        encode,decode : bool
-            If True, encoding,decoding will run
-    """
+                 encode=True, decode=True, threshold=None, **kwargs):
 
     # --------------------------------------------------------------------------------------------------------------------
     # DEFINE FILE NAMES
@@ -224,6 +201,7 @@ def run_workflow(conn_name, connectome, path_res_conn, path_io, path_res_sim, pa
     # load connectivity data
     conn = np.load(os.path.join(path_res_conn, conn_file))
     ctx = np.load(os.path.join(DATA_DIR, 'cortical', 'cortical_' + connectome + '.npy'))
+    # conn = conn[np.ix_(np.where(ctx == 1)[0], np.where(ctx == 1)[0])]
 
     # scale weights [0,1]
     if bin: conn = conn.astype(bool).astype(int)
@@ -236,17 +214,22 @@ def run_workflow(conn_name, connectome, path_res_conn, path_io, path_res_sim, pa
 
     # select input nodes
     if input_nodes is None: input_nodes = np.where(ctx == 0)[0]
-    if output_nodes is None: output_nodes = np.where(ctx == 1)[0]
 
     # --------------------------------------------------------------------------------------------------------------------
     # CREATE I/O DATA FOR TASK
     # ----------------------------------------------------------------------------------------------------------------------
     if not os.path.exists(os.path.join(path_io, input_file)):
 
-        io_kwargs = {'time_len':2050}
+        io_kwargs = {'time_len':2050,
+                     'step_len':20,
+                     'bias':0.5,
+                     'n_repeats':3
+                    }
 
         inputs, outputs = io.get_io_data(task=TASK,
                                          task_ref=TASK_REF,
+                                         n_nodes=n_nodes,
+                                         input_nodes=input_nodes,
                                          **io_kwargs
                                         )
 
@@ -257,25 +240,30 @@ def run_workflow(conn_name, connectome, path_res_conn, path_io, path_res_sim, pa
     # --------------------------------------------------------------------------------------------------------------------
     # NETWORK SIMULATION - LINEAR MODEL
     # ----------------------------------------------------------------------------------------------------------------------
-    alphas = tasks.get_default_alpha_values(SPEC_TASK)
     if not os.path.exists(os.path.join(path_res_sim, res_states_file)):
 
         input_train, input_test = np.load(os.path.join(path_io, input_file))
 
-        # create input connectivity matrix
-        w_in = np.zeros((input_train.shape[1],len(conn)))
-        w_in[:,input_nodes] = FACTOR
-
-        reservoir_states_train = sim_lnm.run_sim(w_in=w_in,
-                                                 w=conn,
+        reservoir_states_train = sim_lnm.run_sim(conn=conn,
+                                                 input_nodes=input_nodes,
                                                  inputs=input_train,
-                                                 alphas=alphas,
+                                                 factor=FACTOR,
+                                                 task=SPEC_TASK,
+                                                 activation='piecewise',
+                                                 threshold=threshold,
+                                                 alphas=[.5, 1.0, 1.5, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0,\
+                                                         5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10]
                                                 )
 
-        reservoir_states_test  = sim_lnm.run_sim(w_in=w_in,
-                                                 w=conn,
+        reservoir_states_test  = sim_lnm.run_sim(conn=conn,
+                                                 input_nodes=input_nodes,
                                                  inputs=input_test,
-                                                 alphas=alphas,
+                                                 factor=FACTOR,
+                                                 task=SPEC_TASK,
+                                                 activation='piecewise',
+                                                 threshold=threshold,
+                                                 alphas=[.5, 1.0, 1.5, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0,\
+                                                         5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10]
                                                 )
 
         reservoir_states = [(rs_train, rs_test) for rs_train, rs_test in zip(reservoir_states_train, reservoir_states_test)]
@@ -285,8 +273,10 @@ def run_workflow(conn_name, connectome, path_res_conn, path_io, path_res_sim, pa
     # --------------------------------------------------------------------------------------------------------------------
     # IMPORT I/O DATA FOR TASK
     # ----------------------------------------------------------------------------------------------------------------------
+    kwargs_pttn_recog = {'time_lens':30*np.ones(int(0.5*10*80), dtype=int)} # time_lens = len_pattern * np.ones(0.5 * n_patterns * n_repeats)
+
     reservoir_states = np.load(os.path.join(path_res_sim, res_states_file), allow_pickle=True)
-    reservoir_states = reservoir_states[:, :, :, output_nodes]
+    reservoir_states = reservoir_states[:, :, :, np.where(ctx == 1)[0]]
     reservoir_states = reservoir_states.squeeze()
     reservoir_states = np.split(reservoir_states, len(reservoir_states), axis=0)
     reservoir_states = [rs.squeeze() for rs in reservoir_states]
@@ -301,16 +291,21 @@ def run_workflow(conn_name, connectome, path_res_conn, path_io, path_res_sim, pa
 
             print('\nEncoding: ')
             df_encoding = coding.encoder(task=SPEC_TASK,
-                                         target=outputs,
-                                         reservoir_states=reservoir_states,
-                                         readout_modules=readout_modules,
-                                         alphas=alphas,
+                                         target=outputs.copy(),
+                                         reservoir_states=reservoir_states.copy(),
+                                         output_nodes=output_nodes,
+                                         class_labels=class_labels,
+                                         class_mapp=class_mapp,
+                                         include_alpha=[.5, 1.0, 1.5, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0,\
+                                                        5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10],
+                                         **kwargs_pttn_recog
                                          )
 
-            df_encoding = df_encoding.rename(columns={'module':'class'}, copy=False)
             df_encoding.to_csv(os.path.join(path_res_tsk, encoding_file))
     except:
+        print('pass')
         pass
+
 
     # --------------------------------------------------------------------------------------------------------------------
     # PERFORM TASK - DECODERS
@@ -323,18 +318,21 @@ def run_workflow(conn_name, connectome, path_res_conn, path_io, path_res_sim, pa
 
             print('\nDecoding: ')
             df_decoding = coding.decoder(task=SPEC_TASK,
-                                         target=outputs,
-                                         reservoir_states=reservoir_states,
-                                         readout_modules=readout_modules,
+                                         target=outputs.copy(),
+                                         reservoir_states=reservoir_states.copy(),
+                                         output_nodes=output_nodes,
+                                         class_labels=class_labels,
+                                         class_mapp=class_mapp,
                                          bin_conn=conn_bin,
-                                         alphas=alphas,
+                                         include_alpha=[.5, 1.0, 1.5, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0,\
+                                                        5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10],
+                                         **kwargs_pttn_recog
                                          )
 
-            df_decoding = df_decoding.rename(columns={'module':'class'}, copy=False)
             df_decoding.to_csv(os.path.join(path_res_tsk, decoding_file))
-
     except:
         pass
+
 
     # delete reservoir states to release memory storage
     if iter_sim: os.remove(os.path.join(path_res_sim, res_states_file))
@@ -343,7 +341,7 @@ def run_workflow(conn_name, connectome, path_res_conn, path_io, path_res_sim, pa
 #%% --------------------------------------------------------------------------------------------------------------------
 # LOCAL
 # ----------------------------------------------------------------------------------------------------------------------
-def reliability(connectome):
+def reliability_thr(connectome):
     """
        Uses the 70 subjs to generate 1000 bootstrapped samples of 40 subjs
        to reconstruct 1000 consensus matrices
@@ -355,7 +353,7 @@ def reliability(connectome):
     # t0_1 = time.clock()
     # t0_2 = time.time()
 
-    EXP = 'reliability'
+    EXP = 'reliability_thr'
 
     IO_TASK_DIR  = os.path.join(RAW_RES_DIR, 'io_tasks', EXP, f'{INPUTS}_scale{connectome[-3:]}')
     RES_CONN_DIR = os.path.join(RAW_RES_DIR, 'conn_results', EXP, f'scale{connectome[-3:]}')
@@ -371,6 +369,7 @@ def reliability(connectome):
     # --------------------------------------------------------------------------------------------------------------------
     # CREATE CONSENSUS MATRICES
     # ----------------------------------------------------------------------------------------------------------------------
+
     CONN_DIR = os.path.join(DATA_DIR, 'connectivity', 'individual')
 
     filename, class_labels, class_mapping_ctx = load_metada(connectome)
@@ -415,9 +414,11 @@ def reliability(connectome):
     for r1 in res1: r1.get()
     pool1.close()
 
+
     # --------------------------------------------------------------------------------------------------------------------
     # RUN WORKFLOW
     # ----------------------------------------------------------------------------------------------------------------------
+
     params = []
     for iter_id in range(N_RUNS):
 
@@ -429,12 +430,16 @@ def reliability(connectome):
                'iter_io':False,
                'iter_sim':True,
                'encode':True,
-               'decode':True,
-               'readout_modules':class_mapping_ctx,
+               'decode':False,
+               'class_labels':class_labels,
+               'class_mapp':class_mapping_ctx,
                'path_res_conn':RES_CONN_DIR,
                'path_io':IO_TASK_DIR,
                'path_res_sim':RES_SIM_DIR,
                'path_res_tsk':RES_TSK_DIR,
+               'threshold':1.0
+               # 'input_nodes':[223,455],
+               # 'input_nodes':[501,1007],
                 }
 
         params.append(tmp)
@@ -449,7 +454,7 @@ def reliability(connectome):
     # print (time.time()-t0_2, "seconds wall time")
 
 
-def significance(connectome):
+def significance_thr(connectome):
     """
         Different null connectivity matrix, same I/O signals
     """
@@ -458,7 +463,7 @@ def significance(connectome):
     # t0_1 = time.clock()
     # t0_2 = time.time()
 
-    EXP = 'significance'
+    EXP = 'significance_thr'
 
     IO_TASK_DIR  = os.path.join(RAW_RES_DIR, 'io_tasks', EXP, f'{INPUTS}_scale{connectome[-3:]}')
     RES_CONN_DIR = os.path.join(RAW_RES_DIR, 'conn_results', EXP, f'scale{connectome[-3:]}')
@@ -510,12 +515,16 @@ def significance(connectome):
                'iter_io':False,
                'iter_sim':True,
                'encode':True,
-               'decode':True,
-               'readout_modules':class_mapping_ctx,
+               'decode':False,
+               'class_labels':class_labels,
+               'class_mapp':class_mapping_ctx,
                'path_res_conn':RES_CONN_DIR,
                'path_io':IO_TASK_DIR,
                'path_res_sim':RES_SIM_DIR,
                'path_res_tsk':RES_TSK_DIR,
+               'threshold':1.0
+               # 'input_nodes':[223,455],
+               # 'input_nodes':[501,1007],
                }
 
         params.append(tmp)
@@ -530,7 +539,7 @@ def significance(connectome):
     # print (time.time()-t0_2, "seconds wall time")
 
 
-def spintest(connectome):
+def spintest_thr(connectome):
     """
         Same connectivity matrix, same I/O signals, same reservoir states,
         I/O node assignments based on spintest
@@ -540,7 +549,7 @@ def spintest(connectome):
     # t0_1 = time.clock()
     # t0_2 = time.time()
 
-    EXP = 'spintest'
+    EXP = 'spintest_thr'
 
     IO_TASK_DIR  = os.path.join(RAW_RES_DIR, 'io_tasks', EXP, f'{INPUTS}_scale{connectome[-3:]}')
     RES_SIM_DIR  = os.path.join(RAW_RES_DIR, 'sim_results', EXP, f'{INPUTS}_scale{connectome[-3:]}')
@@ -569,12 +578,16 @@ def spintest(connectome):
                'iter_io':False,
                'iter_sim':False,
                'encode':True,
-               'decode':True,
-               'readout_modules':class_mapping_ctx.copy()[spins[:, iter_id]],
+               'decode':False,
+               'class_labels':class_labels,
+               'class_mapp':class_mapping_ctx.copy()[spins[:, iter_id]],
                'path_res_conn':CONN_DIR,
                'path_io':IO_TASK_DIR,
                'path_res_sim':RES_SIM_DIR,
                'path_res_tsk':RES_TSK_DIR,
+               'threshold':1.0
+               # 'input_nodes':[223,455],
+               # 'input_nodes':[501,1007],
                }
 
         params.append(tmp)
@@ -593,14 +606,12 @@ def spintest(connectome):
 # MAIN
 # ----------------------------------------------------------------------------------------------------------------------
 def main():
-    connectomes = ['human_500',
-                   'human_250'
-                  ]
 
-    for connectome in connectomes:
-        reliability(connectome)
-        significance(connectome)
-        spintest(connectome)
+    connectome = 'human_500' #human_250  #human_500
+    #
+    # reliability_thr(connectome)
+    # significance_thr(connectome)
+    spintest_thr(connectome)
 
 if __name__ == '__main__':
     main()

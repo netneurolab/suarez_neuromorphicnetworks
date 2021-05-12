@@ -24,7 +24,8 @@ from plotting import plotting
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-CONNECTOME = 'human_250'
+TASK = 'memory_capacity' #'memory_capacity' #'pattern_recognition'
+CONNECTOME = 'human_500'
 CLASS = 'functional' #'functional' 'cytoarch'
 INPUTS = 'subctx'  #'subctx' 'thalamus'
 
@@ -40,7 +41,7 @@ PROC_RES_DIR = os.path.join(PROJ_DIR, 'proc_results')
 # IMPORT DATA FUNCTIONS
 # ----------------------------------------------------------------------------------------------------------------------
 def load_avg_scores_per_alpha(analysis, coding):
-    RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', analysis, f'{INPUTS}_scale{CONNECTOME[-3:]}')
+    RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', TASK, analysis, f'{INPUTS}_scale{CONNECTOME[-3:]}')
     avg_scores = pd.read_csv(os.path.join(RES_TSK_DIR, f'{CLASS}_avg_{coding}.csv'))
     return avg_scores
 
@@ -49,7 +50,13 @@ def load_avg_scores_per_alpha(analysis, coding):
 # PI - AVG SCORE ACROSS CLASSES PER ALPHA VALUE - ALL REGIMES AT ONCE
 # ----------------------------------------------------------------------------------------------------------------------
 # load data
-ANALYSES = ['reliability', 'significance', 'spintest']
+ANALYSES = [
+            'reliability', 'significance', 'spintest',  
+            'reliability_mod', 'significance_mod', 
+#            'whole_brain', 'leakyIF', 'lsm',
+#            'reliability_corrected', 'significance_corrected', 'spintest_corrected',
+#            'reliability_thr',  'significance_thr', 'spintest_thr'
+            ] 
 
 df_brain_scores = []
 for analysis in ANALYSES:
@@ -69,6 +76,9 @@ df_brain_scores[score] = (df_brain_scores[score]-min_score)/(max_score-min_score
 # boxplot
 score = 'performance'
 include_alpha = [0.3, 0.5, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 2.0, 2.5, 3.0, 3.5]
+#include_alpha = np.linspace(0,10,21)
+#include_alpha = [0.3, 0.5, 0.7, 0.8, 0.9, 0.95, 1.0, 1.05, 1.1, 1.2, 1.3, 1.4, 1.5, 2.0, 2.5, 3.0, 3.5]
+
 
 df_brain_scores = pd.concat([df_brain_scores.loc[np.isclose(df_brain_scores['alpha'], alpha), :] for alpha in include_alpha])\
                     .reset_index(drop=True)
@@ -82,7 +92,7 @@ plotting.boxplot(x='alpha', y=score, df=df_brain_scores.copy(),
                  ylim=(0,1),
                  legend=True,
                  width=0.8,
-                 fig_name=f'brain_vs_nulls_vs_alpha_{CONNECTOME}_{INPUTS}',
+#                 fig_name=f'brain_vs_nulls_vs_alpha_{CONNECTOME}_{INPUTS}',
                  figsize=(22,8),
                  showfliers=True,
                  )
@@ -91,9 +101,10 @@ plotting.boxplot(x='alpha', y=score, df=df_brain_scores.copy(),
 #%% --------------------------------------------------------------------------------------------------------------------
 # PII - VISUAL INSPECTION SCORES DISTRIBUTION
 # ----------------------------------------------------------------------------------------------------------------------
-ANALYSES = ['reliability', 'significance', 'spintest'] #'significance', 'spintest']
+#ANALYSES = ['reliability', 'significance', 'spintest'] #, 'significance', 'spintest', 'reliability_thr', 'significance_thr', 'spintest_thr'] #'reliability', 'reliability_mod', 'significance', 'significance_mod', 'spintest']
+include_alpha = [1.0]#, 1.1, 1.2, 1.3, 1.4, 1.5, 2.0]  #1.0]
 
-for alpha in [1.0]: # include_alpha:
+for alpha in include_alpha:
 
     print(f'\n---------------------------------------alpha: ... {alpha} ---------------------------------------')
     tmp_df_alpha = df_brain_scores.loc[np.isclose(df_brain_scores['alpha'], alpha), :]
@@ -111,13 +122,13 @@ for alpha in [1.0]: # include_alpha:
                     label=analysis
                     )
 
-    ax.xaxis.set_major_locator(MultipleLocator(0.05))
+#    ax.xaxis.set_major_locator(MultipleLocator(0.05))
     ax.get_yaxis().set_visible(False)
     ax.legend(fontsize=15, frameon=False, ncol=1, loc='upper right')
-    ax.set_xlim(0.60, 1.0)
+#    ax.set_xlim(0.20, 1.0)
 
     sns.despine(offset=10, left=True, trim=True)
-    fig.savefig(fname=os.path.join('C:/Users/User/Dropbox/figures_RC/eps', f'dist_brain_{analysis}_{CONNECTOME}.eps'), transparent=True, bbox_inches='tight', dpi=300)
+#    fig.savefig(fname=os.path.join('C:/Users/User/Dropbox/figs/', f'dist_brain_{analysis}_{CONNECTOME}.eps'), transparent=True, bbox_inches='tight', dpi=300)
     plt.show()
     plt.close()
 
@@ -134,14 +145,14 @@ def cohen_d_2samp(x,y):
     return (np.mean(x) - np.mean(y)) / np.sqrt(((nx-1)*np.std(x, ddof=1) ** 2 + (ny-1)*np.std(y, ddof=1) ** 2) / dof)
 
 
-include_alpha = [1.0]
+#include_alpha =  [1.0]# , 1.1, 1.2, 1.3, 1.4, 1.5, 2.0] 
 for alpha in include_alpha:
 
     print(f'\n---------------------------------------alpha: ... {alpha} ---------------------------------------')
 
     brain = df_brain_scores.loc[(df_brain_scores.analysis == 'reliability') & (np.isclose(df_brain_scores['alpha'], alpha))]
-    rewir = df_brain_scores.loc[(df_brain_scores.analysis == 'significance') & (np.isclose(df_brain_scores['alpha'], alpha))]
-    spint = df_brain_scores.loc[(df_brain_scores.analysis == 'spintest') & (np.isclose(df_brain_scores['alpha'], alpha))]
+    rewir = df_brain_scores.loc[(df_brain_scores.analysis == 'significance') & (np.isclose(df_brain_scores['alpha'], alpha))] #significance
+    spint = df_brain_scores.loc[(df_brain_scores.analysis == 'spintest') & (np.isclose(df_brain_scores['alpha'], alpha))] #spintest
 
     print('Two-sample Wilcoxon-Mann-Whitney rank-sum test:')
     print(f' Brain median: {np.nanmedian(brain.performance.values)}')

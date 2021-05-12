@@ -24,7 +24,8 @@ from plotting import plot_tasks
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-CONNECTOME = 'human_250'
+TASK = 'pattern_recognition'
+CONNECTOME = 'human_500'
 CLASS = 'functional'
 INPUTS = 'subctx'
 ANALYSIS = 'reliability'
@@ -36,7 +37,7 @@ ANALYSIS = 'reliability'
 PROJ_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 PROC_RES_DIR = os.path.join(PROJ_DIR, 'proc_results')
-RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
+RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', TASK, ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
 NET_PROP_DIR = os.path.join(PROC_RES_DIR, 'net_props_results', ANALYSIS, f'scale{CONNECTOME[-3:]}')
 
 
@@ -129,7 +130,7 @@ def distplt_corr_net_props_and_scores(corr, net_prop_names, dynamics):
         plt.suptitle(' '.join(prop.split('_')))
 
         sns.despine(offset=10, trim=True, left=True)
-        fig.savefig(fname=os.path.join('C:/Users/User/Dropbox/figures_RC/eps', f'{prop}.eps'), transparent=True, bbox_inches='tight', dpi=300)
+#        fig.savefig(fname=os.path.join('C:/Users/User/Dropbox/figures_RC/eps', f'{prop}.eps'), transparent=True, bbox_inches='tight', dpi=300)
         plt.show()
 
 
@@ -194,7 +195,7 @@ def scatterplot_net_prop_vs_scores_group(dynamics, coding, x, y):
         plt.title(dyn_regime)
 
     sns.despine(offset=10, trim=False)
-    fig.savefig(fname=os.path.join('C:/Users/User/Dropbox/figures_RC/eps', f'{x}_{ANALYSIS}_scttplt.eps'), transparent=True, bbox_inches='tight', dpi=300)
+#    fig.savefig(fname=os.path.join('C:/Users/User/Dropbox/figures_RC/eps', f'{x}_{ANALYSIS}_scttplt.eps'), transparent=True, bbox_inches='tight', dpi=300)
     plt.show()
     plt.close()
 

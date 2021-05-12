@@ -41,7 +41,7 @@ def sort_class_labels(class_labels):
         return class_labels
 
 
-def concatenate_net_props_results(path, class_mapping, n_samples=1000):
+def concatenate_net_props_results(path, class_mapping, filename, n_samples=1000):
 
     df_net_props = []
     for sample_id in range(n_samples):
@@ -50,7 +50,7 @@ def concatenate_net_props_results(path, class_mapping, n_samples=1000):
         success_sample = True
 
         try:
-            net_props = pd.read_csv(os.path.join(path, f'{CLASS}_net_props_' + str(sample_id) + '.csv'), index_col=0)
+            net_props = pd.read_csv(os.path.join(path, f'{filename}_{sample_id}.csv'), index_col=0)
             net_prop_names = list(net_props.columns)
             net_props['class'] = class_mapping
             net_props = get_avg_net_props_per_class(net_props)
@@ -110,13 +110,14 @@ def concat_net_props_local(connectome, analysis, n_samples=1000):
         input_dir = os.path.join(RAW_RES_DIR, 'net_props_local', analysis, f'scale{connectome[-3:]}')
         df_net_props = concatenate_net_props_results(path=input_dir,
                                                      class_mapping=class_mapping,
+                                                     filename=f'{CLASS}_net_props',
                                                      n_samples=n_samples
                                                      )
 
         df_net_props.to_csv(os.path.join(output_dir, f'{CLASS}_local_net_props.csv'))
 
 
-def concat_net_props_global(connectome, analysis):
+def tranfer_net_props_global(connectome, analysis):
 
     input_dir = os.path.join(RAW_RES_DIR, 'net_props_global', analysis, f'scale{connectome[-3:]}')
     output_dir = os.path.join(PROC_RES_DIR, 'net_props_results', analysis, f'scale{connectome[-3:]}')
@@ -127,20 +128,68 @@ def concat_net_props_global(connectome, analysis):
                   )
 
 
+def tranfer_net_props_modular(connectome, analysis):
+
+    input_dir = os.path.join(RAW_RES_DIR, 'net_props_mod', analysis, f'scale{connectome[-3:]}')
+    output_dir = os.path.join(PROC_RES_DIR, 'net_props_results', analysis, f'scale{connectome[-3:]}')
+
+    if not os.path.exists(os.path.join(output_dir, f'{CLASS}_modular_net_props.csv')):
+        os.rename(os.path.join(input_dir, f'{CLASS}_net_props.csv'),
+                  os.path.join(output_dir, f'{CLASS}_modular_net_props.csv')
+                  )
+
+
+def concat_cliques(connectome, analysis, scale='local', n_samples=1000):
+    
+    if scale == 'local':
+        
+        if CLASS == 'functional': class_mapping = np.load(os.path.join(DATA_DIR, 'rsn_mapping', 'rsn_' + connectome + '.npy'))
+        elif CLASS == 'cytoarch': class_mapping = np.load(os.path.join(DATA_DIR, 'cyto_mapping', 'cyto_' + connectome + '.npy'))
+
+        output_dir = os.path.join(PROC_RES_DIR, 'net_props_results', analysis, f'scale{connectome[-3:]}')
+        if not os.path.exists(output_dir): os.makedirs(output_dir)
+    
+        if not os.path.exists(os.path.join(output_dir, f'{CLASS}_local_cliques.csv')):
+    
+            input_dir = os.path.join(RAW_RES_DIR, 'net_props_local', analysis, f'scale{connectome[-3:]}')
+            df_net_props = concatenate_net_props_results(path=input_dir,
+                                                         class_mapping=class_mapping,
+                                                         filename=f'cliques',
+                                                         n_samples=n_samples
+                                                         )
+            
+            df_net_props.fillna(0, inplace=True, downcast='infer')    
+            df_net_props.to_csv(os.path.join(output_dir, f'{CLASS}_local_cliques.csv'))
+     
+    elif scale == 'modular':
+        
+        input_dir = os.path.join(RAW_RES_DIR, 'net_props_mod', analysis, f'scale{connectome[-3:]}')
+        output_dir = os.path.join(PROC_RES_DIR, 'net_props_results', analysis, f'scale{connectome[-3:]}')
+
+        if not os.path.exists(os.path.join(output_dir, f'{CLASS}_modular_cliques.csv')):
+            os.rename(os.path.join(input_dir, f'{CLASS}_cliques.csv'),
+                      os.path.join(output_dir, f'{CLASS}_modular_cliques.csv')
+                      )
+     
+
+
 #%% ----------------------------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
 
     CONNECTOMES = [
-                   'human_250',
-                   # 'human_500',
+#                   'human_250',
+                    'human_500',
                    ]
 
     ANALYSES   =  {
-                   'reliability':10,
+                   'reliability':1000,
                    # 'significance':1000,
                     }
 
     for connectome in CONNECTOMES[::-1]:
        for analysis, n_samples in ANALYSES.items():
-               concat_net_props_local(connectome, analysis, n_samples=n_samples)
-               concat_net_props_global(connectome, analysis)
+#               concat_net_props_local(connectome, analysis, scale='', n_samples=n_samples)
+#               tranfer_net_props_global(connectome, analysis)
+#               tranfer_net_props_modular(connectome, analysis)
+               concat_cliques(connectome, analysis, scale='local')
+#               concat_cliques(connectome, analysis, scale='modular', n_samples=1000)

@@ -12,8 +12,6 @@ import pandas as pd
 import scipy.io as sio
 from scipy import stats
 
-from statsmodels.stats.multitest import multipletests
-
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import auc
 
@@ -31,7 +29,7 @@ import matplotlib.patches as mpatches
 
 import seaborn as sns
 
-FIG_DIR = 'C:/Users/User/Dropbox/figures_RC/eps' # 'C:/Users/User/Desktop/'
+FIG_DIR = 'C:/Users/User/Dropbox/figs/' # 'C:/Users/User/Desktop/'
 FIG_EXT = '.eps'
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -129,7 +127,7 @@ def boxplot(x, y, df, palette=None, title=None, suptitle=None, hue=None, order=N
 def distplot(x, color, bins=50, hist=False, kde=True, label=None, \
              kde_kws={'shade':True, 'clip':(-1,1)}, \
              xlim=None, x_major_loc=None, ylim=None, y_major_loc=None, \
-             legend=True, fig_name=None, figsize=(20,7), **kwargs):
+             legend=True, fig_name=None, figsize=(20,7), title=None, **kwargs):
 
     sns.set(style="ticks", font_scale=2.0)
 

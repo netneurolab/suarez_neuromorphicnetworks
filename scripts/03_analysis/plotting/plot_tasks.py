@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import scipy.io as sio
 from scipy import stats
-from statsmodels.stats.multitest import multipletests
+#from statsmodels.stats.multitest import multipletests
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import auc
 
@@ -233,7 +233,7 @@ def jointplot_enc_vs_dec(df_scores, score, scale=True, minmax=None, hue_order=No
 
     # plt.suptitle(f'regime : {title}', fontsize=25)
 
-    g.savefig(f'C:/Users/User/Dropbox/figures_RC/eps/jnt_enc_vs_dec_{title}.eps')
+#    g.savefig(f'C:/Users/User/Dropbox/figures_RC/eps/jnt_enc_vs_dec_{title}.eps')
     plt.show()
     plt.close()
 
@@ -254,7 +254,7 @@ def ttest(df_scores, score, fdr_correction=True):
         pval.append(p)
         tstat.append(t)
 
-    if fdr_correction: pval = multipletests(pval, 0.05, 'bonferroni')[1]
+#    if fdr_correction: pval = multipletests(pval, 0.05, 'bonferroni')[1]
 
     return tstat, pval
 
@@ -308,6 +308,6 @@ def barplot_eff_size(eff_size, class_labels, title=None):
 
     # plt.suptitle(f'regime: {title}', fontsize=25)
     sns.despine(offset=10, trim=True)
-    fig.savefig(fname=f'C:/Users/User/Dropbox/figures_RC/eps/bar_effect_size_{title}.eps', transparent=True, bbox_inches='tight', dpi=300)
+#    fig.savefig(fname=f'C:/Users/User/Dropbox/figures_RC/eps/bar_effect_size_{title}.eps', transparent=True, bbox_inches='tight', dpi=300)
     plt.show()
     plt.close()
