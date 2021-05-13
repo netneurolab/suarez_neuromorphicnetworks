@@ -13,7 +13,7 @@ warnings.simplefilter(action='ignore', category=(FutureWarning,RuntimeWarning))
 import numpy as np
 import pandas as pd
 from scipy import stats
-#from statsmodels.stats.multitest import multipletests
+from statsmodels.stats.multitest import multipletests
 
 import seaborn as sns
 
@@ -55,7 +55,7 @@ DYNAMICS = ['stable', 'edge_chaos', 'chaos']
 df_rsn_scores = []
 for analysis in ANALYSES:
     for dyn_regime in DYNAMICS:
-        
+
         if analysis == 'significance_unpert':
             for label in rsn_labels:
                 scores = load_avg_scores_per_class(f'{analysis}_{label}', dyn_regime, 'encoding')
@@ -133,7 +133,7 @@ def statistical_test(df, score, fdr_corr=True, test_type='nonparametric'):
     pval_rewir = []
     effs_rewir = []
     for clase in class_labels:
-        
+
         scores = df.loc[df['class'] == clase, :]
 
         # reliability scores
@@ -149,11 +149,11 @@ def statistical_test(df, score, fdr_corr=True, test_type='nonparametric'):
                                          alternative='two-sided'
                                          )
             eff_size = u/(len(brain)*len(rewire))
-            # if fdr_corr:pval = multipletests(pval, 0.05, 'bonferroni')[1].squeeze()
-    
+            if fdr_corr:pval = multipletests(pval, 0.05, 'bonferroni')[1].squeeze()
+
             pval_rewir.append(pval)
             effs_rewir.append(eff_size)
-    
+
 
         # ----------------------------------------------------------------------------
         # parametric t-test
@@ -162,12 +162,12 @@ def statistical_test(df, score, fdr_corr=True, test_type='nonparametric'):
             # rewired null model
             _, pval = stats.ttest_ind(brain, rewire, equal_var=False)
             eff_size = cohen_d_2samp(brain, rewire)
-            # if fdr_corr:pval = multipletests(pval, 0.05, 'bonferroni')[1].squeeze()
-    
+            if fdr_corr:pval = multipletests(pval, 0.05, 'bonferroni')[1].squeeze()
+
             pval_rewir.append(pval)
             effs_rewir.append(eff_size)
-    
-    
+
+
     pval_rewir = [float(p) for p in pval_rewir]
 
     return pval_rewir, effs_rewir
@@ -188,10 +188,9 @@ for dyn_regime in DYNAMICS:
     print("\t\tBrain vs Rewired - avg across alpha")
     print('\t--------------------------------------------')
     print(f'\t\t{class_labels}')
-   
+
     print('\n\t\tP-vals:')
     print(f'\t\t{np.round(enc_pval_rewir,3)}')
-    
+
     print('\n\t\tEffect size:')
     print(f'\t\t{np.round(enc_effs_rewir,2)}')
-

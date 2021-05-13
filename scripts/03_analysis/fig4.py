@@ -127,7 +127,7 @@ def statistical_test(df, score, fdr_corr=True, test_type='nonparametric'):
         rewire = scores.loc[scores['analysis'] == 'significance', score].values
         spint = scores.loc[scores['analysis'] == 'spintest', score].values
 
-        
+
         # ----------------------------------------------------------------------------
         # nonparametric Mann-Whitney U test
         if test_type == 'nonparametric':
@@ -138,10 +138,10 @@ def statistical_test(df, score, fdr_corr=True, test_type='nonparametric'):
                                          )
             eff_size = u/(len(brain)*len(rewire))
             if fdr_corr:pval = multipletests(pval, 0.05, 'bonferroni')[1].squeeze()
-    
+
             pval_rewir.append(pval)
             effs_rewir.append(eff_size)
-    
+
             # spintest null model
             u, pval = stats.mannwhitneyu(brain,
                                          spint,
@@ -149,7 +149,7 @@ def statistical_test(df, score, fdr_corr=True, test_type='nonparametric'):
                                          )
             eff_size = u/(len(brain)*len(spint))
             if fdr_corr:pval = multipletests(pval, 0.05, 'bonferroni')[1].squeeze()
-    
+
             pval_spint.append(pval)
             effs_spint.append(eff_size)
 
@@ -162,19 +162,19 @@ def statistical_test(df, score, fdr_corr=True, test_type='nonparametric'):
             _, pval = stats.ttest_ind(brain, rewire, equal_var=False)
             eff_size = cohen_d_2samp(brain, rewire)
             if fdr_corr:pval = multipletests(pval, 0.05, 'bonferroni')[1].squeeze()
-    
+
             pval_rewir.append(pval)
             effs_rewir.append(eff_size)
-    
-    
+
+
             # spintest null model
             _, pval = stats.ttest_ind(brain, spint, equal_var=False)
             eff_size = cohen_d_2samp(brain, spint)
             if fdr_corr:pval = multipletests(pval, 0.05, 'bonferroni')[1].squeeze()
-    
+
             pval_spint.append(pval)
             effs_spint.append(eff_size)
-    
+
 
     pval_spint = [float(p) for p in pval_spint]
     pval_rewir = [float(p) for p in pval_rewir]
@@ -188,7 +188,7 @@ DYNAMICS = ['stable', 'edge_chaos', 'chaos']
 class_labels = plot_tasks.sort_class_labels(np.unique(df_rsn_scores['class']))
 for dyn_regime in DYNAMICS:
 
-    print(f'\n\n---------------------------------------  {dyn_regime.upper()}  ---------------------------------------')
+    print(f'\n\n------------------  {dyn_regime.upper()}  ---------------------')
 
     df = df_rsn_scores.loc[df_rsn_scores.dyn_regime == dyn_regime, :]
     enc_pval_spint, enc_effs_spint, enc_pval_rewir, enc_effs_rewir = statistical_test(df.copy(), score)
@@ -198,10 +198,10 @@ for dyn_regime in DYNAMICS:
     print("\t\tBrain vs Rewired - avg across alpha")
     print('\t--------------------------------------------')
     print(f'\t{class_labels}')
-   
+
     print('\tP-vals:')
     print(f'\t{np.round(enc_pval_rewir,3)}')
-    
+
     print('\tEffect size:')
     print(f'\t{np.round(enc_effs_rewir,2)}')
 
@@ -210,10 +210,10 @@ for dyn_regime in DYNAMICS:
     print("\t\tBrain vs Spintest - avg across alpha")
     print('\t--------------------------------------------')
     print(f'\t{class_labels}')
-   
+
     print('\tP-vals:')
     print(f'\t{np.round(enc_pval_spint,3)}')
-    
+
     print('\tEffect size:')
     print(f'\t{np.round(enc_effs_spint,2)}')
 
@@ -227,7 +227,7 @@ score = 'performance' #'capacity', 'performance'
 
 for dyn_regime in DYNAMICS:
 
-    print(f'----------------{dyn_regime.upper()}-----------------')
+    print(f'\n\n----------------{dyn_regime.upper()}-----------------')
 
     df_scores = load_avg_scores_per_class('reliability', dyn_regime, 'encoding')
 
@@ -242,7 +242,7 @@ for dyn_regime in DYNAMICS:
                   left_index=True,
                   right_index=False
                   ).reset_index(drop=True)
-    
+
     df['rel_density'] = (df['rel_density']-min(df['rel_density']))/(max(df['rel_density'])-min(df['rel_density']))
 
     # ------------------
