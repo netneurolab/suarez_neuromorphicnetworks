@@ -42,9 +42,9 @@ python scripts/01_rc_workflow/2_get_network_properties.py
 
 ### Step 2. Compile results
 ```bash
-python scripts/01_fetch_results/fetch_task_results.py
+python scripts/02_fetch_results/fetch_task_results.py
 
-python scripts/01_rc_workflow/fetch_net_props_results.py
+python scripts/02_fetch_results/fetch_net_props_results.py
 ```
 ### Step 3. Analyses and figures
 ```bash
