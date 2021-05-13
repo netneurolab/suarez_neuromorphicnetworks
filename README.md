@@ -8,7 +8,7 @@ This repository contains code for the manuscript "[Learning function from struct
 We investigated the link between macroscale connectivity and the computational properties that emerge from network dynamics in the human connectome.
 We've tried to document the various aspects of this repository with this README file, so feel free to check things out.
 
-This repository can be referenced using [![DOI](https://zenodo.org/badge/319699534.svg)](https://zenodo.org/badge/latestdoi/319699534)
+This repository can be referenced using [![DOI](https://zenodo.org/badge/4758300.svg)](https://doi.org/10.5281/zenodo.4758300)
 
 ## "How to run the things from scratch?"
 
