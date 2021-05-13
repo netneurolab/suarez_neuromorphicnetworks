@@ -120,7 +120,7 @@ def lnplt_scores_vs_alpha(df, score, include_alpha=None, scale=True, minmax=None
                       palette=COLORS[:-1],
                       hue='class',
                       hue_order=sort_class_labels(np.unique(df['class'])),
-                      fig_name='ln_encod_vs_alpha',
+                      # fig_name='ln_encod_vs_alpha',
                       **kwargs
                       )
 
@@ -128,7 +128,7 @@ def lnplt_scores_vs_alpha(df, score, include_alpha=None, scale=True, minmax=None
 # --------------------------------------------------------------------------------------------------------------------
 # P II - BETWEEN NETWORK COMPARISON - AVG ACROSS ALPHA
 # ----------------------------------------------------------------------------------------------------------------------
-def bxplt_scores(df_scores, score, order=None, scale=True, minmax=None, norm_score_by=None, title=None, **kwargs):
+def bxplt_scores(df_scores, score, order=None, scale=True, minmax=None, norm_score_by=None, title=None, legend=True, **kwargs):
 
     if norm_score_by is not None:
         # regress out a variable from coding scores
@@ -158,9 +158,9 @@ def bxplt_scores(df_scores, score, order=None, scale=True, minmax=None, norm_sco
                      df=df_scores,
                      order=order,
                      palette=palette,
-                     legend=True,
+                     legend=legend,
                      # title=f'regime: {title}',
-                     fig_name=f'bx_enc_{title}',
+                     # fig_name=f'bx_enc_{title}',
                      **kwargs
                      )
 
@@ -233,7 +233,6 @@ def jointplot_enc_vs_dec(df_scores, score, scale=True, minmax=None, hue_order=No
 
     # plt.suptitle(f'regime : {title}', fontsize=25)
 
-#    g.savefig(f'C:/Users/User/Dropbox/figures_RC/eps/jnt_enc_vs_dec_{title}.eps')
     plt.show()
     plt.close()
 
@@ -308,6 +307,5 @@ def barplot_eff_size(eff_size, class_labels, title=None):
 
     # plt.suptitle(f'regime: {title}', fontsize=25)
     sns.despine(offset=10, trim=True)
-#    fig.savefig(fname=f'C:/Users/User/Dropbox/figures_RC/eps/bar_effect_size_{title}.eps', transparent=True, bbox_inches='tight', dpi=300)
     plt.show()
     plt.close()

@@ -19,7 +19,6 @@ from plotting import plot_tasks
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-TASK = 'memory_capacity' #'pattern_recognition'
 CONNECTOME = 'human_500'
 CLASS = 'functional' #'functional' 'cytoarch'
 INPUTS = 'subctx'
@@ -31,7 +30,7 @@ ANALYSIS = 'reliability' # 'reliability' 'significance' 'spintest'
 # ----------------------------------------------------------------------------------------------------------------------
 PROJ_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROC_RES_DIR = os.path.join(PROJ_DIR, 'proc_results')
-RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', TASK, ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
+RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
 
 
 #%% --------------------------------------------------------------------------------------------------------------------
@@ -50,7 +49,7 @@ score = 'performance' #'capacity', 'performance'
 
 for dyn_regime in DYNAMICS:
 
-    print(f'\n-------------------------------- {dyn_regime} --------------------------------')
+    print(f'\n-------------------------------- {dyn_regime.upper()} --------------------------------')
 
     # load data
     df_encoding = load_avg_scores_per_class(dyn_regime, 'encoding')
@@ -81,8 +80,8 @@ for dyn_regime in DYNAMICS:
 
     print("Intrinsic networks:")
     print(np.array(class_labels)[np.argsort(eff_size)])
-    print(f'p-vals: {np.array(pval)[np.argsort(eff_size)]}')
-    print(f'Effect size: {eff_size[np.argsort(eff_size)]}')
+    print(f'p-vals: {np.round(np.array(pval)[np.argsort(eff_size)],4)}')
+    print(f'Effect sizes: {np.round(eff_size[np.argsort(eff_size)],3)}')
 
     plot_tasks.barplot_eff_size(eff_size,
                                 class_labels,

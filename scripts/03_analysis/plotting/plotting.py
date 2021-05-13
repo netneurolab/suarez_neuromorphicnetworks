@@ -106,7 +106,6 @@ def boxplot(x, y, df, palette=None, title=None, suptitle=None, hue=None, order=N
          patch.set_facecolor((r, g, b, 0.9))
 
      if legend: ax.legend(fontsize=15, frameon=True, ncol=1, loc='best')
-     else: ax.get_legend().remove()
 
      if title is not None: ax.set_title(title)
      if suptitle is not None: plt.suptitle(suptitle)
@@ -140,7 +139,7 @@ def distplot(x, color, bins=50, hist=False, kde=True, label=None, \
                  kde=kde,
                  kde_kws=kde_kws,
                  color=color,
-                 label=labels,
+                 label=label,
                  **kwargs
                  )
 
@@ -148,7 +147,6 @@ def distplot(x, color, bins=50, hist=False, kde=True, label=None, \
     else: ax.get_legend().remove()
 
     if title is not None: ax.set_title(title)
-    if suptitle is not None: plt.suptitle(suptitle)
 
     if xlim is not None: ax.set_ylim(xlim)
     if x_major_loc is not None: ax.xaxis.set_major_locator(MultipleLocator(x_major_loc))

@@ -25,7 +25,6 @@ from plotting import plotting
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-TASK = 'pattern_recognition' #'memory_capacity' 'pattern_recognition'
 CONNECTOME = 'human_500'
 CLASS = 'functional'
 INPUTS = 'subctx'
@@ -37,7 +36,7 @@ INPUTS = 'subctx'
 PROJ_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_DIR = os.path.join(PROJ_DIR, 'data')
 
-RAW_RES_DIR = f'F:/P3_RC/{TASK}_results_full'#os.path.join(PROJ_DIR, 'raw_results')
+RAW_RES_DIR = os.path.join(PROJ_DIR, 'raw_results')
 PROC_RES_DIR = os.path.join(PROJ_DIR, 'proc_results')
 
 coords = np.load(os.path.join(DATA_DIR, 'coords', f'coords_{CONNECTOME}.npy'))
@@ -47,7 +46,7 @@ dist = distance.cdist(coords, coords, 'euclidean')
 # IMPORT DATA FUNCTIONS
 # ----------------------------------------------------------------------------------------------------------------------
 def load_avg_scores_per_alpha(analysis, coding):
-    RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', TASK, analysis, f'{INPUTS}_scale{CONNECTOME[-3:]}')
+    RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', analysis, f'{INPUTS}_scale{CONNECTOME[-3:]}')
     avg_scores = pd.read_csv(os.path.join(RES_TSK_DIR, f'{CLASS}_avg_{coding}.csv'))
     return avg_scores
 
@@ -95,6 +94,7 @@ min_score = np.min(df_brain_scores['score-to-wiring_cost ratio'].values)
 max_score = np.max(df_brain_scores['score-to-wiring_cost ratio'].values)
 df_brain_scores['score-to-wiring_cost ratio'] = (df_brain_scores['score-to-wiring_cost ratio']-min_score)/(max_score-min_score)
 
+
 #%% --------------------------------------------------------------------------------------------------------------------
 # PII - SCORE TO WIRING COST RATIO
 # ----------------------------------------------------------------------------------------------------------------------
@@ -112,7 +112,6 @@ plotting.boxplot(x='alpha', y=score, df=df_brain_scores.copy(),
                  ylim=(0,1),
                  legend=True,
                  width=0.8,
-                 fig_name=f'brain_vs_nulls_vs_alpha_{CONNECTOME}_{INPUTS}_score_to_wircost',
                  figsize=(22,8),
                  showfliers=True,
                  )
@@ -139,7 +138,6 @@ for alpha in include_alpha:
 
     brain = df_brain_scores.loc[(df_brain_scores.analysis == 'reliability') & (np.isclose(df_brain_scores['alpha'], alpha))]
     rewir = df_brain_scores.loc[(df_brain_scores.analysis == 'significance') & (np.isclose(df_brain_scores['alpha'], alpha))]
-    spint = df_brain_scores.loc[(df_brain_scores.analysis == 'spintest') & (np.isclose(df_brain_scores['alpha'], alpha))]
 
     print('Two-sample Wilcoxon-Mann-Whitney rank-sum test:')
     print(f' Brain median: {np.nanmedian(brain[score].values)}')
@@ -147,7 +145,7 @@ for alpha in include_alpha:
 
     # ----------------------------------------------------------------------------
     # nonparametric Mann-Whitney U test
-    # rewired null model
+    # empirical vs rewired null model
     Urewir, mannu_p_rewir = stats.mannwhitneyu(brain[score].values[~np.isnan(brain[score].values)],
                                                rewir[score].values[~np.isnan(rewir[score].values)],
                                                alternative='two-sided'
@@ -157,7 +155,7 @@ for alpha in include_alpha:
 
     # ----------------------------------------------------------------------------
     # parametric t-test
-    # rewired null model
+    # empirical vs rewired null model
     print('\n')
     print('Two-sample student t-test:')
     print(f' Brain mean: {np.nanmean(brain.performance.values)}')
@@ -193,7 +191,6 @@ for alpha in include_alpha:
     plt.title('memory capacity - to - wiring cost ratio')
 
     sns.despine(offset=10, left=True, trim=True)
-#    fig.savefig(fname=os.path.join('C:/Users/User/Dropbox/figures_RC/eps', f'dist_brain_{analysis}_{CONNECTOME}.eps'), transparent=True, bbox_inches='tight', dpi=300)
     plt.show()
     plt.close()
 
@@ -206,7 +203,7 @@ sample_ids = np.unique(avg_scores.sample_id)
 sample_id = np.random.choice(sample_ids, 1)[0]
 
 sns.set(style="ticks", font_scale=2.0)
-fig = plt.figure(figsize=(8,8)) #figsize=(15,7))  #
+fig = plt.figure(figsize=(8,8)) 
 ax = plt.subplot(111)
 for analysis in ANALYSES:
 
@@ -233,6 +230,5 @@ ax.legend(fontsize=15, frameon=False, ncol=1, loc='upper right')
 plt.title('connection length distribution')
 
 sns.despine(offset=10, left=True, trim=True)
-#fig.savefig(fname=os.path.join('C:/Users/User/Dropbox/figures_RC/eps', f'dist_conn_length_{CONNECTOME}.eps'), transparent=True, bbox_inches='tight', dpi=300)
 plt.show()
 plt.close()

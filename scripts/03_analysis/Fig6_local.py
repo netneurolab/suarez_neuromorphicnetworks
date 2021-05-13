@@ -24,7 +24,6 @@ from plotting import plot_tasks
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-TASK = 'pattern_recognition'
 CONNECTOME = 'human_500'
 CLASS = 'functional'
 INPUTS = 'subctx'
@@ -37,7 +36,7 @@ ANALYSIS = 'reliability'
 PROJ_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 PROC_RES_DIR = os.path.join(PROJ_DIR, 'proc_results')
-RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', TASK, ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
+RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
 NET_PROP_DIR = os.path.join(PROC_RES_DIR, 'net_props_results', ANALYSIS, f'scale{CONNECTOME[-3:]}')
 
 

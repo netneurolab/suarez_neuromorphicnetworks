@@ -12,7 +12,7 @@ from scipy.linalg import eigh
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-import fig5_local
+import Fig6_local
 
 from plotting import plot_tasks
 
@@ -20,7 +20,6 @@ from plotting import plot_tasks
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-TASK = 'memory_capacity'
 CONNECTOME = 'human_500'
 CLASS = 'functional' #'functional' 'cytoarch'
 INPUTS = 'subctx'
@@ -38,7 +37,7 @@ PROC_RES_DIR = os.path.join(PROJ_DIR, 'proc_results')
 
 RES_CONN_DIR = os.path.join(RAW_RES_DIR, 'conn_results', ANALYSIS, f'scale{CONNECTOME[-3:]}')
 NET_PROP_DIR = os.path.join(PROC_RES_DIR, 'net_props_results', ANALYSIS, f'scale{CONNECTOME[-3:]}')
-RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', TASK, ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
+RES_TSK_DIR = os.path.join(PROC_RES_DIR, 'tsk_results', ANALYSIS, f'{INPUTS}_scale{CONNECTOME[-3:]}')
 
 
 #%% --------------------------------------------------------------------------------------------------------------------
@@ -140,26 +139,24 @@ if 'rel_density' not in df_net_props.columns:
 # ----------------------------------------------------------------------------------------------------------------------
 score = 'performance'
 dynamics=['stable', 'edge_chaos', 'chaos']
-include_props = [
-                 'rel_density',
-                 ]
+include_props = ['rel_density']
 
 
-corr, net_props = fig5_local.corr_scores_vs_net_props(dynamics=dynamics,
+corr, net_props = Fig6_local.corr_scores_vs_net_props(dynamics=dynamics,
                                                       score=score,
                                                       coding='encoding',
                                                       include_props=include_props,
                                                       correl='pearson'
                                                       )
 
-fig5_local.distplt_corr_net_props_and_scores(corr=corr.copy(),
+Fig6_local.distplt_corr_net_props_and_scores(corr=corr.copy(),
                                              net_prop_names=include_props,
                                              dynamics=dynamics
                                              )
 
 
 for prop in include_props[:]:
-    fig5_local.scatterplot_net_prop_vs_scores_group(dynamics=dynamics,
+    Fig6_local.scatterplot_net_prop_vs_scores_group(dynamics=dynamics,
                                                     coding='encoding',
                                                     x=prop,
                                                     y=score
@@ -192,7 +189,7 @@ for dyn_regime in DYNAMICS:
 
     df['rel_density'] = (df['rel_density']-min(df['rel_density']))/(max(df['rel_density'])-min(df['rel_density']))
 
-    # ------------------
+    # before regressing out relative density 
     plot_tasks.bxplt_scores(df.copy(),
                             score,
                             scale=True,
@@ -204,7 +201,7 @@ for dyn_regime in DYNAMICS:
                             )
 
 
-    # ------------------
+    # after regressing out relative density 
     plot_tasks.bxplt_scores(df.copy(),
                             score,
                             scale=True,

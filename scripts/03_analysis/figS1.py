@@ -24,9 +24,9 @@ from plotting import plotting
 #%% --------------------------------------------------------------------------------------------------------------------
 # GLOBAL VARIABLES
 # ----------------------------------------------------------------------------------------------------------------------
-CONNECTOME = 'human_500' #'human500' 'human250'
-CLASS = 'functional'     #'functional'
-INPUTS = 'subctx'        #'subctx' 'thalamus'
+CONNECTOME = 'human_500' #'human250'
+CLASS = 'functional' #'functional' 'cytoarch'
+INPUTS = 'subctx'  #'subctx' 'thalamus'
 
 
 #%% --------------------------------------------------------------------------------------------------------------------
@@ -50,10 +50,11 @@ def load_avg_scores_per_alpha(analysis, coding):
 # ----------------------------------------------------------------------------------------------------------------------
 # load data
 ANALYSES = [
-            'reliability',
-            'significance',
-            'spintest'
-            ]
+            'reliability',      # empirical brain networks - intrinsic network partition 
+            'reliability_mod',  # empirical brain networks - network partition that optimizes modularity
+            'significance',     # rewired brain networks - intrinsic network partition 
+            'significance_mod', # rewired brain networks - network partition that optimizes modularity
+            ] 
 
 df_brain_scores = []
 for analysis in ANALYSES:
@@ -114,19 +115,12 @@ for alpha in include_alpha:
                     label=analysis
                     )
 
-    ax.xaxis.set_major_locator(MultipleLocator(0.05))
+#    ax.xaxis.set_major_locator(MultipleLocator(0.05))
     ax.get_yaxis().set_visible(False)
     ax.legend(fontsize=15, frameon=False, ncol=1, loc='upper right')
-    # ax.set_xlim(0.7, 0.95)
+#    ax.set_xlim(0.20, 1.0)
 
     sns.despine(offset=10, left=True, trim=True)
-
-    # fig.savefig(fname='C:/Users/User/Dropbox/figs/distplots.eps',
-    #             orientation='portrait',
-    #             transparent=True,
-    #             bbox_inches='tight',
-    #             dpi=300)
-
     plt.show()
     plt.close()
 
@@ -143,59 +137,91 @@ def cohen_d_2samp(x,y):
     return (np.mean(x) - np.mean(y)) / np.sqrt(((nx-1)*np.std(x, ddof=1) ** 2 + (ny-1)*np.std(y, ddof=1) ** 2) / dof)
 
 
+def compare_models(df_brain_scores, m1, m2, alpha, test_type='nonparametric'):
+    
+    x1 = df_brain_scores.loc[(df_brain_scores.analysis == m1) & (np.isclose(df_brain_scores['alpha'], alpha))]
+    x2 = df_brain_scores.loc[(df_brain_scores.analysis == m2) & (np.isclose(df_brain_scores['alpha'], alpha))]
+
+
+    # ----------------------------------------------------------------------------
+    # nonparametric Mann-Whitney U test
+    if test_type == 'nonparametric':
+        
+        print('\tTwo-sample Wilcoxon-Mann-Whitney rank-sum test:')
+        print(f'\t {m1} median: {np.nanmedian(x1.performance.values)}')
+        print(f'\t {m2} median: {np.nanmedian(x2.performance.values)}')
+
+        U, mannu_p = stats.mannwhitneyu(x1.performance.values[~np.isnan(x1.performance.values)],
+                                        x2.performance.values[~np.isnan(x2.performance.values)],
+                                        alternative='two-sided'
+                                        )
+        U = U/(1000*1000)
+        print(f'\t mannU. pval - {m1} vs {m2}:  {np.round(mannu_p,3)}    Effect size: {np.round(U,2)}')
+    
+    # ----------------------------------------------------------------------------
+    # parametric t-test
+    if test_type == 'parametric':
+        
+        print('\n')
+        print('\tTwo-sample student t-test:')
+        print(f'\t {m1} mean: {np.nanmean(x1.performance.values)}')
+        print(f'\t {m2} mean: {np.nanmean(x2.performance.values)}')
+
+ 
+        _, ttest_p = stats.ttest_ind(x1.performance.values[~np.isnan(x1.performance.values)],
+                                     x2.performance.values[~np.isnan(x2.performance.values)],
+                                     equal_var=False
+                                     )
+        
+        eff_size = cohen_d_2samp(x1.performance.values[~np.isnan(x1.performance.values)], 
+                                 x2.performance.values[~np.isnan(x2.performance.values)])
+        print(f'\t ttest. pval - {m1} vs {m2}:  {np.round(ttest_p,3)}       Effect size:{np.round(eff_size,2)}')
+
+
+#%%
 include_alpha =  [1.0]
 for alpha in include_alpha:
 
     print(f'\n---------------------------------------alpha: ... {alpha} ---------------------------------------')
 
-    brain = df_brain_scores.loc[(df_brain_scores.analysis == 'reliability') & (np.isclose(df_brain_scores['alpha'], alpha))]
-    rewir = df_brain_scores.loc[(df_brain_scores.analysis == 'significance') & (np.isclose(df_brain_scores['alpha'], alpha))] #significance
-    spint = df_brain_scores.loc[(df_brain_scores.analysis == 'spintest') & (np.isclose(df_brain_scores['alpha'], alpha))] #spintest
 
-    print('Two-sample Wilcoxon-Mann-Whitney rank-sum test:')
-    print(f' Brain median: {np.nanmedian(brain.performance.values)}')
-    print(f' Rewired median: {np.nanmedian(rewir.performance.values)}')
-    print(f' Spintest median: {np.nanmedian(spint.performance.values)}')
+    print('\nEmpirical brain networks: ')
+    print('Intrinsic network partition vs Optimized partition: ')
 
-    # ----------------------------------------------------------------------------
-    # nonparametric Mann-Whitney U test
-    # rewired null model
-    Urewir, mannu_p_rewir = stats.mannwhitneyu(brain.performance.values[~np.isnan(brain.performance.values)],
-                                               rewir.performance.values[~np.isnan(rewir.performance.values)],
-                                               alternative='two-sided'
-                                               )
-    Urewir = Urewir/(1000*1000)
-    print(f'\tmannU. pval - rewired:  {mannu_p_rewir}    Effect size: {Urewir}')
+    compare_models(df_brain_scores, 
+                   m1='reliability', 
+                   m2='reliability_mod', 
+                   alpha=alpha, 
+                   test_type='nonparametric')
+
+    
+    print('\nRewired brain networks: ')
+    print('Intrinsic network partition vs Optimized partition')
+    compare_models(df_brain_scores, 
+                   m1='significance', 
+                   m2='significance_mod', 
+                   alpha=alpha, 
+                   test_type='nonparametric')
 
 
-    # spintest null model
-    Uspint, mannu_p_spint = stats.mannwhitneyu(brain.performance.values[~np.isnan(brain.performance.values)],
-                                               spint.performance.values[~np.isnan(spint.performance.values)],
-                                               alternative='two-sided'
-                                               )
-    Uspint = Uspint/(1000*1000)
-    print(f'\tmannU. pval - spintest:  {mannu_p_spint}    Effect size: {Uspint}')
+    print('\nEmpirical vs Rewired brain networks - Intrinsic network partition - (Original result)')
+    compare_models(df_brain_scores, 
+                   m1='reliability', 
+                   m2='significance', 
+                   alpha=alpha, 
+                   test_type='nonparametric')
 
-    # ----------------------------------------------------------------------------
-    # parametric t-test
-    # rewired null model
-    print('\n')
-    print('Two-sample student t-test:')
-    print(f' Brain mean: {np.nanmean(brain.performance.values)}')
-    print(f' Rewired mean: {np.nanmean(rewir.performance.values)}')
-    print(f' Spintest mean: {np.nanmean(spint.performance.values)}')
+    print('\nEmpirical vs Rewired brain networks - Optimized partition')
+    compare_models(df_brain_scores, 
+                   m1='reliability_mod', 
+                   m2='significance_mod', 
+                   alpha=alpha, 
+                   test_type='nonparametric')
 
-    _, ttest_p_rewir = stats.ttest_ind(brain.performance.values[~np.isnan(brain.performance.values)],
-                                       rewir.performance.values[~np.isnan(rewir.performance.values)],
-                                       equal_var=False
-                                       )
-    eff_size_rewir = cohen_d_2samp(brain.performance.values[~np.isnan(brain.performance.values)], rewir.performance.values[~np.isnan(rewir.performance.values)])
-    print(f'\tttest. pval - rewired:  {ttest_p_rewir}       Effect size:{eff_size_rewir}')
+    print('\n Empirical (intrinsic network partition) vs Rewired (optimized partition) brain networks')
+    compare_models(df_brain_scores, 
+                   m1='reliability', 
+                   m2='significance_mod', 
+                   alpha=alpha, 
+                   test_type='nonparametric')
 
-    # spintest null model
-    _, ttest_p_spint = stats.ttest_ind(brain.performance.values[~np.isnan(brain.performance.values)],
-                                       spint.performance.values[~np.isnan(spint.performance.values)],
-                                       equal_var=False
-                                       )
-    eff_size_spint = cohen_d_2samp(brain.performance.values[~np.isnan(brain.performance.values)], spint.performance.values[~np.isnan(spint.performance.values)])
-    print(f'\tttest. pval - spintest:  {ttest_p_spint}       Effect size:{eff_size_spint}')
