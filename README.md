@@ -3,10 +3,12 @@
 
 ## "What's in this repository?"
 
-This repository contains code for the manuscript "[Learning function from structure in neuromorphic networks](https://www.biorxiv.org/content/10.1101/2020.11.10.350876v1)" by Laura Suarez, Blake Richards, Guillaume Lajoie & Bratislav Misic.
+This repository contains code for the manuscript "[Learning function from structure in neuromorphic networks](https://www.biorxiv.org/content/10.1101/2020.11.10.350876v1)" by Laura Suarez, Blake Richards, Guillaume Lajoie & Bratislav Misic. 
 
 We investigated the link between macroscale connectivity and the computational properties that emerge from network dynamics in the human connectome.
 We've tried to document the various aspects of this repository with this README file, so feel free to check things out.
+
+This repository can be referenced using [![DOI](https://zenodo.org/badge/319699534.svg)](https://zenodo.org/badge/latestdoi/319699534)
 
 ## "How to run the things from scratch?"
 
