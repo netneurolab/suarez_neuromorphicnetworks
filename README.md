@@ -54,7 +54,7 @@ python scripts/03_analysis/figX.py
 
 ## "How to run only the analyses?"
 1. Git clone the [suarez_neuromorphicnetworks](https://github.com/estefanysuarez/neuromorphic-networks) repository.
-2. Download the "data" and "proc_results" folders from [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4757892.svg)](https://zenodo.org/record/4757892#.YJ1fQy-95QI), and place them into the repository's root directory!
+2. Download the "data" and "proc_results" folders from [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4757892.svg)](https://zenodo.org/record/4757892#.YJ1fQy-95QI), and place them into the repository's root directory.
 
 To run the analysis presented in Figure "X" of the manuscript, you just need to run:
 
