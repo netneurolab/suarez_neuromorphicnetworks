@@ -21,7 +21,7 @@ First, you'll need to make sure you have installed the appropriate software pack
 ```bash
 cd suarez_neuromorphicnetworks
 conda env create -f environment.yml
-conda activate rcomputing
+conda activate rc
 ```
 
 4. Git clone [reservoir](https://github.com/estefanysuarez/reservoir.git) repository.
