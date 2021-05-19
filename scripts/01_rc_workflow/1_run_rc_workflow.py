@@ -40,7 +40,7 @@ FACTOR = 0.0001 #0.0001 0.001 0.01
 INPUTS = 'subctx'
 CLASS = 'functional' #'functional' 'cytoarch'
 
-N_PROCESS = 10
+N_PROCESS = 12
 N_RUNS = 1000
 
 #%% --------------------------------------------------------------------------------------------------------------------
@@ -263,8 +263,9 @@ def run_workflow(conn_name, connectome, path_res_conn, path_io, path_res_sim, pa
         input_train, input_test = np.load(os.path.join(path_io, input_file))
 
         # create input connectivity matrix
-        w_in = np.zeros((input_train.shape[1],len(conn)))
-        w_in[:,input_nodes] = FACTOR
+        input_train = np.repeat(input_train, len(input_nodes), axis=1)
+        input_test  = np.repeat(input_test, len(input_nodes), axis=1)
+        w_in = FACTOR * np.ones((input_train.shape[1],len(conn))) #Voriginal
 
         reservoir_states_train = sim_lnm.run_sim(w_in=w_in,
                                                  w=conn,
@@ -418,8 +419,29 @@ def reliability(connectome):
     # --------------------------------------------------------------------------------------------------------------------
     # RUN WORKFLOW
     # ----------------------------------------------------------------------------------------------------------------------
+    tmp = {'conn_name':'consensus',
+           'connectome':connectome,
+           'scores_file':filename,
+           'iter_id':0,
+           'iter_conn':True,
+           'iter_io':False,
+           'iter_sim':True,
+           'encode':True,
+           'decode':False,
+           'readout_modules':class_mapping_ctx,
+           'path_res_conn':RES_CONN_DIR,
+           'path_io':IO_TASK_DIR,
+           'path_res_sim':RES_SIM_DIR,
+           'path_res_tsk':RES_TSK_DIR,
+            }
+
+    run_workflow(**tmp)
+
+    # --------------------------------------------------------------------------------------------------------------------
+    # RUN WORKFLOW
+    # ----------------------------------------------------------------------------------------------------------------------
     params = []
-    for iter_id in range(N_RUNS):
+    for iter_id in range(1,N_RUNS):
 
         tmp = {'conn_name':'consensus',
                'connectome':connectome,
@@ -429,7 +451,7 @@ def reliability(connectome):
                'iter_io':False,
                'iter_sim':True,
                'encode':True,
-               'decode':True,
+               'decode':False,
                'readout_modules':class_mapping_ctx,
                'path_res_conn':RES_CONN_DIR,
                'path_io':IO_TASK_DIR,
@@ -499,8 +521,29 @@ def significance(connectome):
     # --------------------------------------------------------------------------------------------------------------------
     # RUN WORKFLOW
     # ----------------------------------------------------------------------------------------------------------------------
+    tmp = {'conn_name':'rand_mio',
+           'connectome':connectome,
+           'scores_file':filename,
+           'iter_id':0,
+           'iter_conn':True,
+           'iter_io':False,
+           'iter_sim':True,
+           'encode':True,
+           'decode':False,
+           'readout_modules':class_mapping_ctx,
+           'path_res_conn':RES_CONN_DIR,
+           'path_io':IO_TASK_DIR,
+           'path_res_sim':RES_SIM_DIR,
+           'path_res_tsk':RES_TSK_DIR,
+           }
+
+    run_workflow(**tmp)
+
+    # --------------------------------------------------------------------------------------------------------------------
+    # RUN WORKFLOW
+    # ----------------------------------------------------------------------------------------------------------------------
     params = []
-    for iter_id in range(N_RUNS):
+    for iter_id in range(1,N_RUNS):
 
         tmp = {'conn_name':'rand_mio',
                'connectome':connectome,
@@ -510,7 +553,7 @@ def significance(connectome):
                'iter_io':False,
                'iter_sim':True,
                'encode':True,
-               'decode':True,
+               'decode':False,
                'readout_modules':class_mapping_ctx,
                'path_res_conn':RES_CONN_DIR,
                'path_io':IO_TASK_DIR,
@@ -558,8 +601,30 @@ def spintest(connectome):
     filename, class_labels, class_mapping_ctx = load_metada(connectome)
     spins = np.genfromtxt(os.path.join(DATA_DIR, 'spin_test', 'spin_' + connectome + '.csv'), delimiter=',').astype(int)
 
+    tmp = {'conn_name':connectome,
+           'connectome':connectome,
+           'scores_file':filename,
+           'iter_id':0,
+           'iter_conn':False,
+           'iter_io':False,
+           'iter_sim':False,
+           'encode':True,
+           'decode':False,
+           'readout_modules':class_mapping_ctx.copy()[spins[:, 0]],
+           'path_res_conn':CONN_DIR,
+           'path_io':IO_TASK_DIR,
+           'path_res_sim':RES_SIM_DIR,
+           'path_res_tsk':RES_TSK_DIR,
+           }
+
+    run_workflow(**tmp)
+
+    # --------------------------------------------------------------------------------------------------------------------
+    # RUN WORKFLOW
+    # ----------------------------------------------------------------------------------------------------------------------
+
     params = []
-    for iter_id in range(N_RUNS):
+    for iter_id in range(1,N_RUNS):
 
         tmp = {'conn_name':connectome,
                'connectome':connectome,
@@ -569,7 +634,7 @@ def spintest(connectome):
                'iter_io':False,
                'iter_sim':False,
                'encode':True,
-               'decode':True,
+               'decode':False,
                'readout_modules':class_mapping_ctx.copy()[spins[:, iter_id]],
                'path_res_conn':CONN_DIR,
                'path_io':IO_TASK_DIR,
@@ -593,13 +658,14 @@ def spintest(connectome):
 # MAIN
 # ----------------------------------------------------------------------------------------------------------------------
 def main():
-    connectomes = ['human_500',
-                   'human_250'
+    connectomes = [
+                   'human_500',
+                   # 'human_250'
                   ]
 
     for connectome in connectomes:
-        reliability(connectome)
-        significance(connectome)
+        # reliability(connectome)
+        # significance(connectome)
         spintest(connectome)
 
 if __name__ == '__main__':
