@@ -188,5 +188,5 @@ if __name__ == '__main__':
               concat_net_props_local(connectome, analysis, scale='', n_samples=n_samples)
               tranfer_net_props_global(connectome, analysis)
               tranfer_net_props_modular(connectome, analysis)
-              concat_cliques(connectome, analysis, scale='local')
-              concat_cliques(connectome, analysis, scale='modular', n_samples=1000)
+              # concat_cliques(connectome, analysis, scale='local')
+              # concat_cliques(connectome, analysis, scale='modular', n_samples=1000)
