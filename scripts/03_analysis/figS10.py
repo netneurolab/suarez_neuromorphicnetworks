@@ -54,17 +54,16 @@ df_lsm = pd.DataFrame(data=lsm, columns=['sample_id', 'alpha', 'performance', 'a
 new_df = pd.concat([df_br, df_lk, df_lsm], axis=0).reset_index()[['sample_id', 'alpha', 'performance', 'analysis']]
 new_df['performance'] = new_df['performance'].astype(float)
 
-# scale values between 0 and 1 
+# scale values between 0 and 1
 min_score = np.min(new_df['performance'])
 max_score = np.max(new_df['performance'])
 new_df['performance'] = (new_df['performance']-min_score)/(max_score-min_score)
 
-# select alpha = 1.0  
+# select alpha = 1.0
 new_df['alpha'] = new_df['alpha'].astype(str)
 include_alpha = ['1.0', 'lsm']
 new_df = pd.concat([new_df.loc[new_df['alpha'] == alpha, :] for alpha in include_alpha])\
                     .reset_index(drop=True)
-
 
 #%% --------------------------------------------------------------------------------------------------------------------
 # BRAIN vs LEAKY INTEGRATE-FIRE vs LIQUID STATE MACHINE

@@ -5,7 +5,6 @@ Created on Mon Feb  3 15:27:07 2020
 @author: Estefany Suarez
 """
 
-
 import os
 os.environ['OPENBLAS_NUM_THREADS'] = "1"
 os.environ['MKL_NUM_THREADS'] = "1"
@@ -265,8 +264,6 @@ def run_workflow(conn_name, connectome, path_res_conn, path_io, path_res_sim, pa
     # --------------------------------------------------------------------------------------------------------------------
     # IMPORT I/O DATA FOR TASK
     # ----------------------------------------------------------------------------------------------------------------------
-    kwargs_pttn_recog = {'time_lens':30*np.ones(int(0.5*10*80), dtype=int)} # time_lens = len_pattern * np.ones(0.5 * n_patterns * n_repeats)
-
     reservoir_states = np.load(os.path.join(path_res_sim, res_states_file), allow_pickle=True)
     reservoir_states = reservoir_states[:, :, :, np.where(ctx == 1)[0]]
     reservoir_states = reservoir_states.squeeze()

@@ -215,7 +215,7 @@ def concat_tsk_results(connectome, analysis, dynamics, coding='encoding', n_samp
 if __name__ == '__main__':
 
     CONNECTOMES = [
-                    'human_250',
+                    # 'human_250',
                     'human_500',
                   ]
 
