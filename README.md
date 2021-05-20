@@ -9,6 +9,7 @@ We investigated the link between macroscale connectivity and the computational p
 
 We've tried to document the various aspects of this repository with this README file, so feel free to check things out!
 
+This repository can be referenced using [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4776829.svg)](https://doi.org/10.5281/zenodo.4776829)
 
 ## "How to run the things from scratch?"
 
