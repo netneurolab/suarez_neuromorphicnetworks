@@ -3,19 +3,20 @@
 
 ## "What's in this repository?"
 
-This repository contains code for the manuscript "[Learning function from structure in neuromorphic networks](https://www.biorxiv.org/content/10.1101/2020.11.10.350876v1)" by Laura Suarez, Blake Richards, Guillaume Lajoie & Bratislav Misic. 
+This repository contains code for the manuscript "[Learning function from structure in neuromorphic networks](https://www.biorxiv.org/content/10.1101/2020.11.10.350876v1)" by Laura Suarez, Blake Richards, Guillaume Lajoie & Bratislav Misic.
 
 We investigated the link between macroscale connectivity and the computational properties that emerge from network dynamics in the human connectome.
-We've tried to document the various aspects of this repository with this README file, so feel free to check things out.
+
+We've tried to document the various aspects of this repository with this README file, so feel free to check things out!
 
 This repository can be referenced using [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4758300.svg)](https://doi.org/10.5281/zenodo.4758300)
 
 ## "How to run the things from scratch?"
 
-First, you'll need to make sure you have installed the appropriate software packages, and have downloaded the appropriate data files. 
+First, you'll need to make sure you have installed the appropriate software packages, and have downloaded the appropriate data files.
 
-1. Git clone the [suarez_neuromorphicnetworks](https://github.com/estefanysuarez/neuromorphic-networks) repository.
-2. Download the "data" folder from [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4757892.svg)](https://zenodo.org/record/4757892#.YJ1fQy-95QI), and place this folder into the repository's root directory!"
+1. Git clone the [suarez_neuromorphicnetworks](https://github.com/netneurolab/suarez_neuromorphicnetworks.git) repository.
+2. Download the "data" and "raw_results" folder from [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4776453.svg)](https://doi.org/10.5281/zenodo.4776453) and place them into the repository's root directory.
 3. In the command line, type:
 
 ```bash
@@ -31,7 +32,7 @@ cd reservoir
 pip install .
 ```
 
-4. Then, follow these steps sequentially (i.e., first "Run simulations", then "Compile results" and then "Analyses and Figures"). 
+4. Then, follow these steps sequentially (i.e., first "Run simulations", then "Compile results" and then "Analyses and Figures").
 
 ### Step 1. Run simulations
 ```bash
@@ -53,8 +54,8 @@ python scripts/03_analysis/figX.py
 (replace X by the number of the figure)
 
 ## "How to run only the analyses?"
-1. Git clone the [suarez_neuromorphicnetworks](https://github.com/estefanysuarez/neuromorphic-networks) repository.
-2. Download the "data" and "proc_results" folders from [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4757892.svg)](https://zenodo.org/record/4757892#.YJ1fQy-95QI), and place them into the repository's root directory.
+1. Git clone the [suarez_neuromorphicnetworks](https://github.com/netneurolab/suarez_neuromorphicnetworks.git) repository.
+2. Download the "data" and "proc_results" folders from [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4776453.svg)](https://doi.org/10.5281/zenodo.4776453) and place them into the repository's root directory.
 
 To run the analysis presented in Figure "X" of the manuscript, you just need to run:
 
