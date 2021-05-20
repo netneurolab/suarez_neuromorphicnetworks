@@ -9,6 +9,7 @@ We investigated the link between macroscale connectivity and the computational p
 
 We've tried to document the various aspects of this repository with this README file, so feel free to check things out!
 
+
 ## "How to run the things from scratch?"
 
 First, you'll need to make sure you have installed the appropriate software packages, and have downloaded the appropriate data files.
@@ -51,6 +52,7 @@ python scripts/03_analysis/figX.py
 ```
 (replace X by the number of the figure)
 
+
 ## "How to run only the analyses?"
 1. Git clone the [suarez_neuromorphicnetworks](https://github.com/netneurolab/suarez_neuromorphicnetworks.git) repository.
 2. Download the "data" and "proc_results" folders from [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4776453.svg)](https://doi.org/10.5281/zenodo.4776453) and place them into the repository's root directory.
@@ -60,6 +62,7 @@ To run the analysis presented in Figure "X" of the manuscript, you just need to 
 ```bash
 python scripts/03_analysis/figX.py
 ```
+
 
 ## "I have some questions..."
 
