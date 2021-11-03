@@ -264,7 +264,7 @@ def run_workflow(conn_name, connectome, path_res_conn, path_io, path_res_sim, pa
 
         # create input connectivity matrix - depends on the shape of the input
         w_in = np.zeros((input_train.shape[1],len(conn)))
-        w_in[input_nodes,:] = FACTOR
+        w_in[:input_nodes] = FACTOR
 
         reservoir_states_train = sim_lnm.run_sim(w_in=w_in,
                                                  w=conn,
@@ -599,7 +599,7 @@ def spintest(connectome):
 def main():
     connectomes = [
                    'human_500',
-                   'human_250'
+                   # 'human_250'
                   ]
 
     for connectome in connectomes:
