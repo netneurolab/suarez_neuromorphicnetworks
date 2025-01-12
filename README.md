@@ -3,7 +3,9 @@
 
 ## "What's in this repository?"
 
-This repository contains code for the manuscript "[Learning function from structure in neuromorphic networks](https://www.biorxiv.org/content/10.1101/2020.11.10.350876v1)" by Laura Suarez, Blake Richards, Guillaume Lajoie & Bratislav Misic.
+This repository contains code for the manuscript:
+
+Suárez, L. E., Richards, B. A., Lajoie, G., & Misic, B. (2021). Learning function from structure in neuromorphic networks. _Nature Machine Intelligence_, _3_(9), 771–786. [https://doi.org/10.1038/s42256-021-00376-1](https://doi.org/10.1038/s42256-021-00376-1)
 
 We investigated the link between macroscale connectivity and the computational properties that emerge from network dynamics in the human connectome.
 
